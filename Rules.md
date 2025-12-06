@@ -68,3 +68,10 @@ Es wird ein echtes Ebay-Kleinanzeigen-Inserat angezeigt.
 Beide müssen den Preis schätzen.
 Wer näher dran ist, gewinnt die Runde und holt Punkte.
 Pro gewonnene Runde:  1 Punkt
+
+Gewinn:
+
+0–19 Punkte: Die traurigste Version – eine Zahnbürste
+20–30 Punkte: Fortgeschrittenes Fegen – ein Kehrblech
+31–40 Punkte: Semi-Profi – ein kleiner Handfeger
+41+ Punkte: Endboss-Modus – der große Feger!

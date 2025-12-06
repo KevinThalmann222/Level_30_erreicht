@@ -113,6 +113,62 @@
     </div>
 </section>
 
+<!-- DAVID'S REWARD TIER -->
+<section class="david-reward-section">
+    <h2>🏆 David's Feg-Utensil</h2>
+    <div id="reward-tier-display" class="reward-tier-display">
+        <div class="current-reward">
+            <div class="reward-icon-large" id="reward-icon">🪥</div>
+            <div class="reward-description">
+                <h3 id="reward-title">0–19 Punkte</h3>
+                <p id="reward-text">Die traurigste Version – eine Zahnbürste</p>
+            </div>
+        </div>
+        <div class="reward-progress-bar">
+            <div class="progress-fill" id="progress-bar" style="width: 0%"></div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Update reward tier based on David's points
+    function updateRewardTier() {
+        const davidScore = parseInt(document.getElementById('david-score').textContent);
+        const icon = document.getElementById('reward-icon');
+        const title = document.getElementById('reward-title');
+        const text = document.getElementById('reward-text');
+        const progressBar = document.getElementById('progress-bar');
+        
+        let tierPercentage = Math.min((davidScore / 41) * 100, 100);
+        progressBar.style.width = tierPercentage + '%';
+        
+        if (davidScore >= 41) {
+            icon.textContent = '🌟';
+            title.textContent = '41+ Punkte';
+            text.textContent = 'Endboss-Modus – der große Feger!';
+        } else if (davidScore >= 31) {
+            icon.textContent = '🧹';
+            title.textContent = '31–40 Punkte';
+            text.textContent = 'Semi-Profi – ein kleiner Handfeger';
+        } else if (davidScore >= 20) {
+            icon.textContent = '🥕';
+            title.textContent = '20–30 Punkte';
+            text.textContent = 'Fortgeschrittenes Fegen – ein Kehrblech';
+        } else {
+            icon.textContent = '🪥';
+            title.textContent = '0–19 Punkte';
+            text.textContent = 'Die traurigste Version – eine Zahnbürste';
+        }
+    }
+
+    // Update reward tier whenever scores change
+    const originalUpdateScoreboard = updateScoreboard;
+    updateScoreboard = function() {
+        originalUpdateScoreboard();
+        updateRewardTier();
+    };
+</script>
+
 <!-- MODERATOR-KONTROLLEN -->
 <section class="moderator-controls-section">
     <h2>🎛️ Moderator-Bereich: Punkte verwalten</h2>
@@ -179,16 +235,20 @@
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- RESET UND NAVIGATION -->
-    <div class="action-buttons">
-        <button class="btn btn-danger btn-lg" onclick="resetAllScores()">
-            🔄 Alle Punkte zurücksetzen
-        </button>
-        <button class="btn btn-secondary btn-lg" onclick="lockModeratorScoreboard()">
-            🔒 Sperren
-        </button>
+        <!-- RESET BUTTON - NUR FÜR MODERATOREN -->
+        <div class="moderator-actions">
+            <button class="btn btn-danger btn-lg" onclick="resetAllScores()">
+                🔄 Alle Punkte zurücksetzen
+            </button>
+        </div>
+
+        <!-- LOCK BUTTON -->
+        <div class="action-buttons">
+            <button class="btn btn-secondary btn-lg" onclick="lockModeratorScoreboard()">
+                🔒 Sperren
+            </button>
+        </div>
     </div>
     </div>
 </section>
@@ -212,10 +272,6 @@
                 <td class="game-points">{{ game.punkte }} Punkte</td>
             </tr>
             {% endfor %}
-            <tr class="total-row">
-                <td colspan="2"><strong>Maximale Punkte insgesamt:</strong></td>
-                <td><strong>{{ games|map(attribute='punkte')|sum }} Punkte</strong></td>
-            </tr>
         </tbody>
     </table>
 </section>
