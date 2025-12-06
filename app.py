@@ -13,14 +13,32 @@ Die App läuft auf deinem Laptop als Moderator.
 Gäste können von ihren Telefonen aus unter der gleichen IP-Adresse abstimmen.
 """
 
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime
 import json
+import os
+from werkzeug.utils import secure_filename
+from uuid import uuid4
 
 app = Flask(__name__)
 app.secret_key = 'david_wird_30_secret_key_2025'
 
+# ========== GEWINNSPIEL KONFIGURATION ==========
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+# Stelle sicher, dass der Upload-Ordner existiert
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    """Prüft, ob die Datei ein erlaubtes Format hat."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # ========== GLOBALE DATENSTRUKTUREN ==========
+
+# Gewinnspiel-Bilder: {id: {filename, uploader_name, votes, upload_time}}
+gewinnspiel_images = {}
 
 # Abstimmungsergebnisse für jedes Spiel
 votes = {
@@ -118,6 +136,30 @@ def reset_votes_for_game(game_id):
     if game_id in votes:
         for key in votes[game_id]:
             votes[game_id][key] = 0
+
+# ========== GEWINNSPIEL HELPER FUNKTIONEN ==========
+
+def get_all_images_sorted():
+    """Gibt alle Gewinnspiel-Bilder sortiert nach Votes (absteigend) zurück."""
+    images_list = []
+    for image_id, image_data in gewinnspiel_images.items():
+        images_list.append({
+            'id': image_id,
+            'filename': image_data['filename'],
+            'uploader_name': image_data['uploader_name'],
+            'votes': image_data['votes'],
+            'upload_time': image_data.get('upload_time', '')
+        })
+    # Sortiere nach Votes (absteigend)
+    images_list.sort(key=lambda x: x['votes'], reverse=True)
+    return images_list
+
+def get_top_image():
+    """Gibt das Bild mit den meisten Votes zurück (aktueller Spitzenreiter)."""
+    images = get_all_images_sorted()
+    if images:
+        return images[0]
+    return None
 
 # ========== ROUTES: STARTSEITE UND NAVIGATION ==========
 
@@ -245,6 +287,97 @@ def total_punkte_filter(game_list):
     """Berechnet die Gesamtpunkzahl aller Spiele."""
     return sum(game['punkte'] for game in game_list)
 
+# ========== ROUTES: GEWINNSPIEL ==========
+
+@app.route('/gewinnspiel')
+def gewinnspiel():
+    """Zeigt die Gewinnspiel-Seite mit Upload und Galerie."""
+    images = get_all_images_sorted()
+    top_image = get_top_image()
+    return render_template('gewinnspiel.html', 
+                         images=images,
+                         top_image=top_image)
+
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    """
+    Verarbeitet den Image Upload.
+    Erwartet: 'image' (Datei) und 'uploader_name' (Text)
+    """
+    try:
+        # Prüfe, ob die Datei vorhanden ist
+        if 'image' not in request.files:
+            return jsonify({'success': False, 'error': 'Keine Datei ausgewählt'}), 400
+        
+        file = request.files['image']
+        uploader_name = request.form.get('uploader_name', 'Anonym').strip()
+        
+        if not uploader_name:
+            uploader_name = 'Anonym'
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'Keine Datei ausgewählt'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'success': False, 'error': 'Nur JPG, PNG und GIF erlaubt'}), 400
+        
+        # Prüfe Dateigröße
+        file.seek(0, os.SEEK_END)
+        file_length = file.tell()
+        file.seek(0)
+        if file_length > MAX_FILE_SIZE:
+            return jsonify({'success': False, 'error': 'Datei zu groß (Max: 5 MB)'}), 400
+        
+        # Generiere einen eindeutigen Dateinamen
+        file_ext = file.filename.rsplit('.', 1)[1].lower()
+        unique_filename = f"{uuid4().hex}.{file_ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+        
+        # Speichere die Datei
+        file.save(filepath)
+        
+        # Speichere Metadaten
+        image_id = str(uuid4())
+        gewinnspiel_images[image_id] = {
+            'filename': unique_filename,
+            'uploader_name': uploader_name,
+            'votes': 0,
+            'upload_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        return jsonify({
+            'success': True,
+            'message': 'Bild erfolgreich hochgeladen!',
+            'image_id': image_id
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/vote_image/<image_id>', methods=['POST', 'GET'])
+def vote_image(image_id):
+    """
+    Registriert eine Abstimmung für ein Bild.
+    """
+    if image_id in gewinnspiel_images:
+        gewinnspiel_images[image_id]['votes'] += 1
+        return jsonify({
+            'success': True,
+            'message': 'Danke für deine Abstimmung!',
+            'votes': gewinnspiel_images[image_id]['votes']
+        })
+    return jsonify({'success': False, 'error': 'Bild nicht gefunden'}), 404
+
+@app.route('/get_images')
+def get_images():
+    """Gibt alle Bilder als JSON zurück (für AJAX)."""
+    images = get_all_images_sorted()
+    return jsonify({
+        'success': True,
+        'images': images,
+        'top_image': get_top_image()
+    })
+
 # ========== ERROR HANDLER ==========
 
 @app.errorhandler(404)
@@ -272,4 +405,4 @@ if __name__ == '__main__':
     # Starte den Flask Development Server
     # debug=True: Automatisches Reload bei Code-Änderungen
     # host='0.0.0.0': Erreichbar von anderen Geräten im Netzwerk
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

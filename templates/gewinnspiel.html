@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Gewinnspiel - David wird 30{% endblock %}
+
+{% block content %}
+
+<div class="gewinnspiel-container">
+    <!-- HEADER -->
+    <div class="gewinnspiel-header">
+        <h1>🎉 Gewinnspiel</h1>
+        <p class="gewinnspiel-description">
+            Lade hier ein lustiges Bild mit David hoch. Das Bild mit den meisten Stimmen gewinnt – es wartet eine Überraschung auf den Gewinner!
+        </p>
+    </div>
+
+    <!-- UPLOAD SECTION -->
+    <section class="upload-section">
+        <h2>📸 Bild hochladen</h2>
+        <form id="upload-form" class="upload-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="uploader_name">Dein Name:</label>
+                <input 
+                    type="text" 
+                    id="uploader_name" 
+                    name="uploader_name" 
+                    placeholder="Gib deinen Namen ein..."
+                    maxlength="50"
+                    class="form-input"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="image">Bild auswählen:</label>
+                <input 
+                    type="file" 
+                    id="image" 
+                    name="image" 
+                    accept="image/*"
+                    class="form-input-file"
+                    required
+                >
+                <small>Erlaubte Formate: JPG, PNG, GIF (Max: 5 MB)</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                ⬆️ Bild hochladen
+            </button>
+        </form>
+
+        <div id="upload-message" class="upload-message" style="display: none;"></div>
+    </section>
+
+    <!-- TOP WINNER DISPLAY -->
+    {% if top_image %}
+    <section class="top-winner-section">
+        <h2>🏆 Aktueller Spitzenreiter</h2>
+        <div class="top-winner-card">
+            <div class="top-winner-image">
+                <img src="{{ url_for('static', filename='uploads/' + top_image.filename) }}" alt="Spitzenreiter">
+            </div>
+            <div class="top-winner-info">
+                <p class="top-winner-name">Hochgeladen von: <strong>{{ top_image.uploader_name }}</strong></p>
+                <p class="top-winner-votes">👍 <strong>{{ top_image.votes }} Stimmen</strong></p>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- GALLERY SECTION -->
+    <section class="gallery-section">
+        <h2>🖼️ Alle Bilder</h2>
+        <p class="gallery-hint">Das Bild mit den meisten Stimmen gewinnt eine Überraschung!</p>
+        
+        {% if images %}
+            <div class="gallery-grid">
+                {% for image in images %}
+                <div class="gallery-card" id="image-{{ image.id }}">
+                    <div class="gallery-image">
+                        <img src="{{ url_for('static', filename='uploads/' + image.filename) }}" alt="Bild von {{ image.uploader_name }}">
+                    </div>
+                    <div class="gallery-info">
+                        <p class="gallery-uploader">Hochgeladen von: <strong>{{ image.uploader_name }}</strong></p>
+                        <div class="gallery-votes">
+                            <span class="vote-count">👍 <span class="votes-number" data-image-id="{{ image.id }}">{{ image.votes }}</span> Stimmen</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="voteImage('{{ image.id }}')">
+                            ❤️ Gefällt mir
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-gallery">
+                <p>📭 Noch keine Bilder hochgeladen.</p>
+                <p>Sei der Erste und lade ein lustiges Bild hoch!</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- NAVIGATION -->
+    <section class="navigation-section">
+        <div class="nav-buttons">
+            <a href="/spieluebersicht" class="btn btn-secondary btn-lg">
+                🎮 Zurück zu den Spielen
+            </a>
+            <a href="/" class="btn btn-primary btn-lg">
+                🏠 Zur Startseite
+            </a>
+        </div>
+    </section>
+</div>
+
+<script>
+    // Upload-Formular Handler
+    document.getElementById('upload-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const messageDiv = document.getElementById('upload-message');
+
+        try {
+            const response = await fetch('/upload_image', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                messageDiv.innerHTML = `<div class="message-success">✅ ${data.message}</div>`;
+                document.getElementById('upload-form').reset();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                messageDiv.innerHTML = `<div class="message-error">❌ Fehler: ${data.error}</div>`;
+            }
+
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        } catch (error) {
+            messageDiv.innerHTML = `<div class="message-error">❌ Upload fehlgeschlagen: ${error.message}</div>`;
+            messageDiv.style.display = 'block';
+        }
+    });
+
+    // Vote Handler
+    async function voteImage(imageId) {
+        try {
+            const response = await fetch(`/vote_image/${imageId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update vote count
+                const votesSpan = document.querySelector(`[data-image-id="${imageId}"]`);
+                if (votesSpan) {
+                    votesSpan.textContent = data.votes;
+                }
+
+                // Show success message
+                alert('👍 Danke für deine Abstimmung!');
+
+                // Reload page after short delay to update top winner
+                setTimeout(() => location.reload(), 500);
+            } else {
+                alert('❌ Abstimmung fehlgeschlagen');
+            }
+        } catch (error) {
+            alert('❌ Fehler beim Abstimmen: ' + error.message);
+        }
+    }
+
+    // Auto-refresh images every 5 seconds
+    setInterval(async function() {
+        try {
+            const response = await fetch('/get_images');
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update vote counts
+                data.images.forEach(image => {
+                    const votesSpan = document.querySelector(`[data-image-id="${image.id}"]`);
+                    if (votesSpan) {
+                        votesSpan.textContent = image.votes;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Auto-refresh fehler:', error);
+        }
+    }, 5000);
+</script>
+
+{% endblock %}

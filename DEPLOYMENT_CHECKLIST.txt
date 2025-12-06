@@ -1,0 +1,91 @@
+# ✅ PythonAnywhere Deployment Checklist
+
+## Files Ready for Upload
+
+- ✅ `app.py` - Main Flask application (debug=False for production)
+- ✅ `wsgi.py` - WSGI configuration file (NEW)
+- ✅ `requirements.txt` - Python dependencies (NEW)
+- ✅ `templates/` folder - All HTML templates
+- ✅ `static/` folder - CSS, images, uploads
+- ✅ `PYTHONANYWHERE_DEPLOYMENT.md` - Detailed deployment guide (NEW)
+
+## Pre-Upload Verification
+
+- ✅ All dependencies listed in requirements.txt
+- ✅ WSGI file created and configured
+- ✅ Upload folder structure correct
+- ✅ Static files are organized
+- ✅ No hardcoded localhost references (except comments)
+- ✅ Debug mode set to False
+
+## PythonAnywhere Account Setup
+
+1. Create account on https://www.pythonanywhere.com
+2. Choose your username (your app will be at: https://yourusername.pythonanywhere.com)
+
+## Upload Steps
+
+1. **Create directory** on PythonAnywhere: `/home/yourusername/level30app/`
+2. **Upload all files** using File Manager
+3. **Install virtualenv** in PythonAnywhere Bash console
+4. **Install dependencies**: `pip install -r requirements.txt`
+5. **Configure WSGI file** in Web tab
+6. **Set static files** mapping in Web tab
+7. **Reload web app**
+
+## Important Configuration
+
+### In Web Tab:
+- Virtual environment: `/home/yourusername/.virtualenvs/level30`
+- Python version: 3.10+
+- WSGI file: Point to your wsgi.py
+
+### Static Files Mapping:
+- URL: `/static/` → Directory: `/home/yourusername/level30app/static`
+- URL: `/static/uploads/` → Directory: `/home/yourusername/level30app/static/uploads`
+
+## Data Persistence Warning
+
+⚠️ **Current Setup Uses In-Memory Storage**
+- Voting data = Lost on app restart
+- Uploaded images = Lost on app restart
+- Scores = Lost on app restart
+
+✅ **For Persistent Storage**, consider:
+- Upgrade to PythonAnywhere PAID account (MySQL database)
+- Implement SQLite database
+- Use file-based JSON storage
+
+## Testing After Deployment
+
+1. ✅ Home page loads
+2. ✅ Navigation menu works
+3. ✅ Games display correctly
+4. ✅ Voting works
+5. ✅ Scoreboard updates
+6. ✅ Gewinnspiel upload works
+7. ✅ Images display
+8. ✅ Mobile responsive design works
+9. ✅ Hamburger menu on mobile
+
+## Quick Reference
+
+**Your app will be at:**
+```
+https://yourusername.pythonanywhere.com
+```
+
+**Share this link with guests:**
+- Fully functional on all devices
+- No additional setup needed
+- Works from anywhere with internet
+
+## Troubleshooting Resources
+
+- 📖 Full guide: `PYTHONANYWHERE_DEPLOYMENT.md`
+- 🔗 PythonAnywhere Help: https://help.pythonanywhere.com
+- 🔗 Flask Docs: https://flask.palletsprojects.com
+
+---
+
+**Everything is ready for deployment! 🚀**
