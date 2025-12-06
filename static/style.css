@@ -661,6 +661,116 @@ section h3 {
 }
 
 /* ============================================
+   GAME PAGES - CONTENT & IMAGES
+   ============================================ */
+
+.game-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.game-image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-image-large {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    max-height: 500px;
+    border-radius: 16px;
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    object-fit: contain;
+    object-position: center;
+}
+
+/* ============================================
+   DRINKING GAME RULES SECTION
+   ============================================ */
+
+.drinking-rules {
+    background: linear-gradient(135deg, rgba(181, 55, 242, 0.1) 0%, rgba(255, 0, 110, 0.1) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(181, 55, 242, 0.3);
+    border-radius: var(--border-radius);
+    padding: 2.5rem;
+    margin: 3rem 0;
+    box-shadow: 0 0 30px rgba(181, 55, 242, 0.1);
+}
+
+.drinking-rules h2 {
+    color: var(--accent-purple);
+    border-bottom-color: var(--accent-purple);
+}
+
+.drinking-intro {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.8;
+}
+
+.drinking-intro p {
+    margin-bottom: 0.8rem;
+}
+
+.drinking-intro p:first-child {
+    color: var(--primary);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.drinking-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.drinking-rule {
+    background: rgba(20, 24, 41, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(181, 55, 242, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.drinking-rule:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(181, 55, 242, 0.3);
+    transform: translateY(-5px);
+}
+
+.drinking-rule .number {
+    font-size: 2rem;
+    font-weight: 900;
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.drinking-rule .content {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ============================================
    VOTING SECTION
    ============================================ */
 
@@ -966,6 +1076,16 @@ section h3 {
         padding: 0 1rem;
     }
 
+    .game-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .game-image-large {
+        max-width: 100%;
+        max-height: 400px;
+    }
+
     .score-container {
         grid-template-columns: 1fr;
         gap: 1.5rem;
@@ -983,6 +1103,10 @@ section h3 {
     .vote-buttons {
         flex-direction: column;
         gap: 1rem;
+    }
+
+    .drinking-rules-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -1095,5 +1219,26 @@ section h3 {
     .footer {
         padding: 1.5rem 1rem;
         font-size: 0.9rem;
+    }
+
+    .drinking-rules {
+        padding: 1.5rem 1rem;
+    }
+
+    .drinking-rules h2 {
+        font-size: 1.3rem;
+    }
+
+    .drinking-rules-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .drinking-rule {
+        padding: 1rem;
+    }
+
+    .drinking-rule .number {
+        font-size: 1.5rem;
     }
 }
