@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Spielübersicht - David wird 30{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <h1>🎮 Alle Spiele</h1>
+    <p class="total-points">Maximale Punkte insgesamt: <strong>{{ games|length }} Spiele</strong></p>
+</div>
+
+<div class="games-grid">
+    {% for game in games %}
+    <div class="game-card">
+        <div class="game-image-small">
+            <img src="{{ url_for('static', filename='spiel' ~ game.number ~ '.png') }}" alt="{{ game.name }}" onerror="this.style.display='none'">
+        </div>
+        
+        <div class="game-header">
+            <span class="game-number">Spiel {{ game.number }}</span>
+            <span class="game-points">{{ game.punkte }} Punkte</span>
+        </div>
+        
+        <h2 class="game-title">{{ game.name }}</h2>
+        
+        <p class="game-description">{{ game.beschreibung }}</p>
+        
+        <div class="game-actions">
+            <a href="/spiel/{{ game.id }}" class="btn btn-primary">
+                Spiel starten ▶
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<section class="summary-section">
+    <h2>Punkteverteilung:</h2>
+    <table class="points-table">
+        <thead>
+            <tr>
+                <th>Spiel</th>
+                <th>Punkte</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for game in games %}
+            <tr>
+                <td>{{ game.number }}. {{ game.name }}</td>
+                <td><strong>{{ game.punkte }}</strong></td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td><strong>Gesamt</strong></td>
+                <td><strong>{{ games|map(attribute='punkte')|sum }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+{% endblock %}

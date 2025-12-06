@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Seite nicht gefunden{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <h1>404</h1>
+    <h2>Oops! Diese Seite existiert nicht.</h2>
+    <p>Es sieht so aus, als hättest du dich vertan oder die Seite wurde verschoben.</p>
+    
+    <div class="error-actions">
+        <a href="/" class="btn btn-primary">
+            🏠 Zurück zur Startseite
+        </a>
+        <a href="/spieluebersicht" class="btn btn-secondary">
+            🎮 Zu den Spielen
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Scoreboard - David wird 30{% endblock %}
+
+{% block content %}
+<script>
+    const MODERATOR_PASSWORD = '123';
+
+    // Funktionen für Moderator Lock/Unlock auf Scoreboard
+    function unlockModeratorScoreboard() {
+        const password = document.getElementById('moderator-password-scoreboard').value;
+        if (password === MODERATOR_PASSWORD) {
+            document.getElementById('moderator-locked-scoreboard').style.display = 'none';
+            document.getElementById('moderator-unlocked-scoreboard').style.display = 'grid';
+        } else {
+            alert('❌ Falsches Passwort!');
+            document.getElementById('moderator-password-scoreboard').value = '';
+        }
+    }
+
+    function lockModeratorScoreboard() {
+        document.getElementById('moderator-locked-scoreboard').style.display = 'flex';
+        document.getElementById('moderator-unlocked-scoreboard').style.display = 'none';
+        document.getElementById('moderator-password-scoreboard').value = '';
+    }
+
+    // Enter-Taste für Passwort-Input aktivieren
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('moderator-password-scoreboard');
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    unlockModeratorScoreboard();
+                }
+            });
+        }
+
+        // Auto-Update des Scoreboards
+        updateScoreboard();
+        setInterval(updateScoreboard, 2000);
+    });
+
+    async function updateScoreboard() {
+        try {
+            const response = await fetch('/get_scores');
+            const scores = await response.json();
+            document.getElementById('david-score').textContent = scores.david;
+            document.getElementById('gaeste-score').textContent = scores.gaeste;
+        } catch (error) {
+            console.error('Fehler beim Aktualisieren der Punkte:', error);
+        }
+    }
+
+    async function addPoints(team, points) {
+        try {
+            const response = await fetch(`/add_points/${team}/${points}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                updateScoreboard();
+            }
+        } catch (error) {
+            console.error('Fehler beim Hinzufügen von Punkten:', error);
+        }
+    }
+
+    async function resetAllScores() {
+        if (confirm('Wirklich alle Punkte zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden!')) {
+            try {
+                const response = await fetch('/reset_scores', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    updateScoreboard();
+                    alert('Alle Punkte wurden zurückgesetzt!');
+                }
+            } catch (error) {
+                console.error('Fehler beim Zurücksetzen der Punkte:', error);
+            }
+        }
+    }
+</script>
+
+<div class="scoreboard-header">
+    <h1>🏆 SCOREBOARD 🏆</h1>
+    <p class="scoreboard-subtitle">Gesamtpunkte</p>
+</div>
+
+<!-- HAUPTANZEIGE DER PUNKTE - BEAMER-FREUNDLICH -->
+<section class="scoreboard-display">
+    <div class="score-container">
+        <div class="score-team david-team">
+            <h2>David</h2>
+            <div class="score-value" id="david-score">{{ scores.david }}</div>
+            <div class="score-label">Punkte</div>
+        </div>
+
+        <div class="score-vs">VS</div>
+
+        <div class="score-team gaeste-team">
+            <h2>Gäste</h2>
+            <div class="score-value" id="gaeste-score">{{ scores.gaeste }}</div>
+            <div class="score-label">Punkte</div>
+        </div>
+    </div>
+</section>
+
+<!-- MODERATOR-KONTROLLEN -->
+<section class="moderator-controls-section">
+    <h2>🎛️ Moderator-Bereich: Punkte verwalten</h2>
+    
+    <div id="moderator-locked-scoreboard" class="moderator-locked">
+        <p>🔒 Moderator-Bereich ist gesperrt</p>
+        <input type="password" id="moderator-password-scoreboard" placeholder="Passwort eingeben..." class="moderator-password-input">
+        <button class="btn btn-secondary" onclick="unlockModeratorScoreboard()">
+            🔓 Entsperren
+        </button>
+    </div>
+
+    <div id="moderator-unlocked-scoreboard" class="points-manager" style="display: none;">
+        <!-- David's Punkte -->
+        <div class="team-controls">
+            <h3>David's Punkte</h3>
+            <div class="button-group">
+                <button class="btn btn-lg btn-success" onclick="addPoints('david', 1)">
+                    ➕ +1
+                </button>
+                <button class="btn btn-lg btn-success" onclick="addPoints('david', 2)">
+                    ➕ +2
+                </button>
+                <button class="btn btn-lg btn-success" onclick="addPoints('david', 3)">
+                    ➕ +3
+                </button>
+                <button class="btn btn-lg btn-success" onclick="addPoints('david', 6)">
+                    ➕ +6
+                </button>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-lg btn-warning" onclick="addPoints('david', -1)">
+                    ➖ -1
+                </button>
+                <button class="btn btn-lg btn-warning" onclick="addPoints('david', -2)">
+                    ➖ -2
+                </button>
+            </div>
+        </div>
+
+        <!-- Gäste's Punkte -->
+        <div class="team-controls">
+            <h3>Gäste's Punkte</h3>
+            <div class="button-group">
+                <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 1)">
+                    ➕ +1
+                </button>
+                <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 2)">
+                    ➕ +2
+                </button>
+                <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 3)">
+                    ➕ +3
+                </button>
+                <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 6)">
+                    ➕ +6
+                </button>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-lg btn-warning" onclick="addPoints('gaeste', -1)">
+                    ➖ -1
+                </button>
+                <button class="btn btn-lg btn-warning" onclick="addPoints('gaeste', -2)">
+                    ➖ -2
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESET UND NAVIGATION -->
+    <div class="action-buttons">
+        <button class="btn btn-danger btn-lg" onclick="resetAllScores()">
+            🔄 Alle Punkte zurücksetzen
+        </button>
+        <button class="btn btn-secondary btn-lg" onclick="lockModeratorScoreboard()">
+            🔒 Sperren
+        </button>
+    </div>
+    </div>
+</section>
+
+<!-- SPIELÜBERSICHT MIT PUNKTE -->
+<section class="games-summary">
+    <h2>🎮 Spielübersicht & Punkteverteilung</h2>
+    <table class="games-table">
+        <thead>
+            <tr>
+                <th>Spiel</th>
+                <th>Name</th>
+                <th>Punkte</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for game in games %}
+            <tr>
+                <td class="game-num">{{ game.number }}</td>
+                <td class="game-name">{{ game.name }}</td>
+                <td class="game-points">{{ game.punkte }} Punkte</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td colspan="2"><strong>Maximale Punkte insgesamt:</strong></td>
+                <td><strong>{{ games|map(attribute='punkte')|sum }} Punkte</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- NAVIGATION -->
+<section class="navigation-section">
+    <div class="nav-buttons">
+        <a href="/spieluebersicht" class="btn btn-secondary btn-lg">
+            🎮 Zurück zu den Spielen
+        </a>
+        <a href="/" class="btn btn-primary btn-lg">
+            🏠 Zur Startseite
+        </a>
+    </div>
+</section>
+
+{% endblock %}

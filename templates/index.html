@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Level 30 Erreicht - David wird 30{% endblock %}
+
+{% block content %}
+
+<!-- LANDING PAGE -->
+<div class="landing-page">
+    <div class="landing-container">
+        <div class="landing-content">
+            <h1>
+                <span class="level-text">LEVEL 30</span>
+                <span class="david-text">ERREICHT!</span>
+            </h1>
+            <p>Willkommen zu David's epischem Geburtstag! 🎉</p>
+            <p>Genießet die spannendsten Spiele und helft David, die beste Party seines Lebens zu feiern.</p>
+            <div class="landing-buttons">
+                <a href="/spieluebersicht" class="btn btn-primary btn-lg">
+                    🎮 Spiele starten
+                </a>
+                <a href="/scoreboard" class="btn btn-secondary btn-lg">
+                    📊 Scoreboard ansehen
+                </a>
+            </div>
+        </div>
+        <div class="landing-image">
+            <img src="{{ url_for('static', filename='david.png') }}" alt="David">
+        </div>
+    </div>
+</div>
+
+<!-- INFO SECTION -->
+<div class="container">
+    <section class="welcome-section">
+        <h2>So funktioniert's:</h2>
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>📱 Gäste abstimmen</h3>
+                <p>Alle Gäste stimmen von ihren Telefonen ab, wer jedes Spiel gewinnt. Ihre Abstimmungen zählen!</p>
+            </div>
+            <div class="info-card">
+                <h3>💻 Live-Ergebnisse</h3>
+                <p>Die Abstimmungsergebnisse werden in Echtzeit aktualisiert. Spannend bis zum Ende!</p>
+            </div>
+            <div class="info-card">
+                <h3>🏆 Punkte sammeln</h3>
+                <p>Jedes Spiel bringt unterschiedliche Punkte. Wer gewinnt am Ende und wird Champion?</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}{{ game.name }} - David wird 30{% endblock %}
+
+{% block content %}
+<script>
+    // Starte Auto-Update der Abstimmungen wenn die Seite geladen ist
+    document.addEventListener('DOMContentLoaded', function() {
+        startAutoUpdate('{{ game.id }}', 1000);
+    });
+</script>
+
+<div class="game-header-section">
+    <div class="game-badge">Spiel {{ game.number }} / 6</div>
+    <h1>{{ game.name }}</h1>
+    <p class="points-badge">💰 {{ game.punkte }} Punkte</p>
+</div>
+
+<!-- SPIELBESCHREIBUNG UND REGELN -->
+<section class="game-content">
+    <div class="game-info">
+        <h2>📝 Spielbeschreibung</h2>
+        <p class="description-text">{{ game.beschreibung }}</p>
+
+        <h3>📋 Spielregeln:</h3>
+        <ul class="rules-list">
+            {% for regel in game.regeln %}
+            <li>{{ regel }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- BILD-PLATZHALTER -->
+    <div class="game-image-container">
+        <img src="{{ url_for('static', filename='spiel' ~ game.number ~ '.png') }}" alt="{{ game.name }}" class="game-image-large">
+    </div>
+</section>
+
+<!-- ABSTIMMUNGSBEREICH FÜR GÄSTE -->
+<section class="voting-section">
+    <h2>🗳️ Jetzt abstimmen!</h2>
+    <p class="voting-intro">Wer gewinnt dieses Spiel?</p>
+    
+    <div class="vote-buttons">
+        {% for option_id, option_name in game.voting_options %}
+        <button class="btn btn-vote" onclick="submitVote('{{ game.id }}', '{{ option_id }}')">
+            {{ option_name }}
+        </button>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- LIVE-ABSTIMMUNGSERGEBNISSE -->
+<section class="results-section">
+    <h2>📊 Live-Ergebnisse</h2>
+    <p class="results-info">Die Abstimmungen aktualisieren sich automatisch.</p>
+    <div id="votes-{{ game.id }}">
+        <div class="vote-results">
+            {% for option_id, option_name in game.voting_options %}
+            <div class="vote-item">
+                <span>{{ option_name }}: 0 (0%)</span>
+                <div class="vote-bar">
+                    <div class="vote-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- MODERATOR-BEREICH (RESET ABSTIMMUNGEN) -->
+<section class="moderator-section">
+    <h2>🎛️ Moderator-Bereich</h2>
+    <div id="moderator-locked" class="moderator-locked">
+        <p>🔒 Moderator-Bereich ist gesperrt</p>
+        <input type="password" id="moderator-password" placeholder="Passwort eingeben..." class="moderator-password-input">
+        <button class="btn btn-secondary" onclick="unlockModerator()">
+            🔓 Entsperren
+        </button>
+    </div>
+    <div id="moderator-unlocked" class="moderator-controls" style="display: none;">
+        <div class="moderator-control-group">
+            <h3>🗳️ Gewinner festlegen:</h3>
+            <button class="btn btn-success" onclick="setGameWinner('{{ game.id }}', 'david')">
+                ✅ David gewinnt ({{ game.punkte }} Punkte)
+            </button>
+            <button class="btn btn-primary" onclick="setGameWinner('{{ game.id }}', 'gaeste')">
+                ✅ Gäste gewinnen ({{ game.punkte }} Punkte)
+            </button>
+        </div>
+        <div class="moderator-control-group">
+            <button class="btn btn-warning" onclick="if(confirm('Abstimmungen wirklich zurücksetzen?')) { resetVotes('{{ game.id }}'); }">
+                🔄 Abstimmungen zurücksetzen
+            </button>
+        </div>
+        <div class="moderator-control-group">
+            <button class="btn btn-secondary" onclick="lockModerator()">
+                🔒 Sperren
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- NAVIGATION ZUM NÄCHSTEN SPIEL -->
+<section class="navigation-section">
+    <div class="nav-buttons">
+        <a href="/spieluebersicht" class="btn btn-secondary">
+            ◀ Zurück zur Übersicht
+        </a>
+        {% if next_game %}
+        <a href="/spiel/{{ next_game.id }}" class="btn btn-primary">
+            Nächstes Spiel: {{ next_game.name }} ▶
+        </a>
+        {% else %}
+        <a href="/scoreboard" class="btn btn-success">
+            🏆 Zum Abschluss-Scoreboard ▶
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    const MODERATOR_PASSWORD = '123';
+
+    // Funktion zum Entsperren des Moderator-Bereichs
+    function unlockModerator() {
+        const password = document.getElementById('moderator-password').value;
+        if (password === MODERATOR_PASSWORD) {
+            document.getElementById('moderator-locked').style.display = 'none';
+            document.getElementById('moderator-unlocked').style.display = 'flex';
+        } else {
+            alert('❌ Falsches Passwort!');
+            document.getElementById('moderator-password').value = '';
+        }
+    }
+
+    // Funktion zum Sperren des Moderator-Bereichs
+    function lockModerator() {
+        document.getElementById('moderator-locked').style.display = 'flex';
+        document.getElementById('moderator-unlocked').style.display = 'none';
+        document.getElementById('moderator-password').value = '';
+    }
+
+    // Enter-Taste für Passwort-Input aktivieren
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('moderator-password');
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    unlockModerator();
+                }
+            });
+        }
+    });
+
+    // Funktion zum Zurücksetzen der Abstimmungen
+    async function resetVotes(gameId) {
+        try {
+            const response = await fetch(`/reset_votes/${gameId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log('Votes reset:', data.message);
+                updateVoteDisplay(gameId);
+            }
+        } catch (error) {
+            console.error('Fehler beim Zurücksetzen der Abstimmungen:', error);
+        }
+    }
+
+    // Funktion zum Festlegen des Spielgewinners und automatisches Hinzufügen der Punkte
+    async function setGameWinner(gameId, winner) {
+        try {
+            const response = await fetch(`/set_game_winner/${gameId}/${winner}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                console.log('Scores:', data.scores);
+                // Optional: Seite aktualisieren oder zum nächsten Spiel gehen
+            } else {
+                alert('❌ Fehler: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Fehler beim Festlegen des Gewinners:', error);
+        }
+    }
+</script>
+
+{% endblock %}
