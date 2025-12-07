@@ -22,9 +22,26 @@
                 <li><a href="/spieluebersicht">Alle Spiele</a></li>
                 <li><a href="/scoreboard" class="nav-scoreboard">🏆 Scoreboard</a></li>
                 <li><a href="/gewinnspiel">🎉 Gewinnspiel</a></li>
+                {% if is_moderator %}
+                <li><button class="btn btn-logout" onclick="logoutModerator()" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">🚪 Abmelden</button></li>
+                {% else %}
+                <li><button class="btn btn-login" onclick="showModeratorLogin()" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">🔓 Moderator</button></li>
+                {% endif %}
             </ul>
         </div>
     </nav>
+
+    <!-- MODERATOR LOGIN MODAL -->
+    <div id="moderator-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 90%; max-width: 300px;">
+            <h2 style="margin-top: 0; text-align: center;">🔐 Moderator Login</h2>
+            <input type="password" id="mod-password" placeholder="Passwort" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;" onkeypress="if(event.key==='Enter') loginModerator()">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="loginModerator()" style="flex: 1; background: #28a745; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">✓ Login</button>
+                <button onclick="closeModeratorLogin()" style="flex: 1; background: #6c757d; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">✕ Abbrechen</button>
+            </div>
+        </div>
+    </div>
 
     <main class="container">
         {% block content %}{% endblock %}
@@ -92,6 +109,59 @@
             updateVoteDisplay(gameId);
             setInterval(() => updateVoteDisplay(gameId), interval);
         }
+
+        // ===== MODERATOR LOGIN/LOGOUT FUNCTIONS =====
+        
+        function showModeratorLogin() {
+            document.getElementById('moderator-modal').style.display = 'flex';
+            setTimeout(() => document.getElementById('mod-password').focus(), 100);
+        }
+
+        function closeModeratorLogin() {
+            document.getElementById('moderator-modal').style.display = 'none';
+            document.getElementById('mod-password').value = '';
+        }
+
+        function loginModerator() {
+            const password = document.getElementById('mod-password').value;
+            
+            fetch('/moderator_login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password: password })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    closeModeratorLogin();
+                    location.reload(); // Reload to show moderator button
+                } else {
+                    alert('❌ Falsches Passwort!');
+                    document.getElementById('mod-password').value = '';
+                }
+            })
+            .catch(e => {
+                alert('Fehler: ' + e);
+                document.getElementById('mod-password').value = '';
+            });
+        }
+
+        function logoutModerator() {
+            fetch('/moderator_logout', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                location.reload(); // Reload to show login button
+            });
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('moderator-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModeratorLogin();
+            }
+        });
 
         // Hamburger Menu Toggle
         const hamburgerMenu = document.getElementById('hamburger-menu');

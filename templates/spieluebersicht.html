@@ -34,27 +34,18 @@
 </div>
 
 <section class="summary-section">
-    <h2>Punkteverteilung:</h2>
-    <table class="points-table">
-        <thead>
-            <tr>
-                <th>Spiel</th>
-                <th>Punkte</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for game in games %}
-            <tr>
-                <td>{{ game.number }}. {{ game.name }}</td>
-                <td><strong>{{ game.punkte }}</strong></td>
-            </tr>
-            {% endfor %}
-            <tr class="total-row">
-                <td><strong>Gesamt</strong></td>
-                <td><strong>{{ games|map(attribute='punkte')|sum }}</strong></td>
-            </tr>
-        </tbody>
-    </table>
+    <h2>🏆 Punkteverteilung:</h2>
+    <div class="points-grid">
+        {% for game in games %}
+        <div class="points-card">
+            <div class="points-card-header">
+                <span class="game-num">Spiel {{ game.number }}</span>
+                <span class="points-badge">{{ game.punkte }} 🎯</span>
+            </div>
+            <p class="game-name">{{ game.name }}</p>
+        </div>
+        {% endfor %}
+    </div>
 </section>
 
 {% endblock %}

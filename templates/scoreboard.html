@@ -4,38 +4,8 @@
 
 {% block content %}
 <script>
-    const MODERATOR_PASSWORD = '123';
-
-    // Funktionen für Moderator Lock/Unlock auf Scoreboard
-    function unlockModeratorScoreboard() {
-        const password = document.getElementById('moderator-password-scoreboard').value;
-        if (password === MODERATOR_PASSWORD) {
-            document.getElementById('moderator-locked-scoreboard').style.display = 'none';
-            document.getElementById('moderator-unlocked-scoreboard').style.display = 'grid';
-        } else {
-            alert('❌ Falsches Passwort!');
-            document.getElementById('moderator-password-scoreboard').value = '';
-        }
-    }
-
-    function lockModeratorScoreboard() {
-        document.getElementById('moderator-locked-scoreboard').style.display = 'flex';
-        document.getElementById('moderator-unlocked-scoreboard').style.display = 'none';
-        document.getElementById('moderator-password-scoreboard').value = '';
-    }
-
-    // Enter-Taste für Passwort-Input aktivieren
+    // Auto-Update des Scoreboards
     document.addEventListener('DOMContentLoaded', function() {
-        const passwordInput = document.getElementById('moderator-password-scoreboard');
-        if (passwordInput) {
-            passwordInput.addEventListener('keypress', function(event) {
-                if (event.key === 'Enter') {
-                    unlockModeratorScoreboard();
-                }
-            });
-        }
-
-        // Auto-Update des Scoreboards
         updateScoreboard();
         setInterval(updateScoreboard, 2000);
     });
@@ -46,6 +16,11 @@
             const scores = await response.json();
             document.getElementById('david-score').textContent = scores.david;
             document.getElementById('gaeste-score').textContent = scores.gaeste;
+            // Also update moderator display if elements exist
+            const davidScoreDisplay = document.getElementById('david-score-display');
+            const gaestScoreDisplay = document.getElementById('gaeste-score-display');
+            if (davidScoreDisplay) davidScoreDisplay.textContent = scores.david;
+            if (gaestScoreDisplay) gaestScoreDisplay.textContent = scores.gaeste;
         } catch (error) {
             console.error('Fehler beim Aktualisieren der Punkte:', error);
         }
@@ -85,6 +60,26 @@
             } catch (error) {
                 console.error('Fehler beim Zurücksetzen der Punkte:', error);
             }
+        }
+    }
+
+    async function setGameWinner(gameId, winner) {
+        try {
+            const response = await fetch(`/set_game_winner/${gameId}/${winner}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                updateScoreboard();
+            } else {
+                alert('❌ Fehler: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Fehler beim Festlegen des Gewinners:', error);
         }
     }
 </script>
@@ -173,65 +168,76 @@
 <section class="moderator-controls-section">
     <h2>🎛️ Moderator-Bereich: Punkte verwalten</h2>
     
-    <div id="moderator-locked-scoreboard" class="moderator-locked">
-        <p>🔒 Moderator-Bereich ist gesperrt</p>
-        <input type="password" id="moderator-password-scoreboard" placeholder="Passwort eingeben..." class="moderator-password-input">
-        <button class="btn btn-secondary" onclick="unlockModeratorScoreboard()">
-            🔓 Entsperren
-        </button>
-    </div>
-
-    <div id="moderator-unlocked-scoreboard" class="points-manager" style="display: none;">
+    {% if is_moderator %}
+    <div class="points-manager">
         <!-- David's Punkte -->
-        <div class="team-controls">
-            <h3>David's Punkte</h3>
+        <div class="team-controls david-controls">
+            <div class="team-header">
+                <h3>👨 David</h3>
+                <div class="current-score" id="david-score-display">{{ scores.david }}</div>
+            </div>
             <div class="button-group">
                 <button class="btn btn-lg btn-success" onclick="addPoints('david', 1)">
-                    ➕ +1
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+1</span>
                 </button>
                 <button class="btn btn-lg btn-success" onclick="addPoints('david', 2)">
-                    ➕ +2
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+2</span>
                 </button>
                 <button class="btn btn-lg btn-success" onclick="addPoints('david', 3)">
-                    ➕ +3
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+3</span>
                 </button>
                 <button class="btn btn-lg btn-success" onclick="addPoints('david', 6)">
-                    ➕ +6
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+6</span>
                 </button>
             </div>
             <div class="button-group">
                 <button class="btn btn-lg btn-warning" onclick="addPoints('david', -1)">
-                    ➖ -1
+                    <span class="btn-icon">➖</span>
+                    <span class="btn-text">-1</span>
                 </button>
                 <button class="btn btn-lg btn-warning" onclick="addPoints('david', -2)">
-                    ➖ -2
+                    <span class="btn-icon">➖</span>
+                    <span class="btn-text">-2</span>
                 </button>
             </div>
         </div>
 
         <!-- Gäste's Punkte -->
-        <div class="team-controls">
-            <h3>Gäste's Punkte</h3>
+        <div class="team-controls gaeste-controls">
+            <div class="team-header">
+                <h3>👥 Gäste</h3>
+                <div class="current-score" id="gaeste-score-display">{{ scores.gaeste }}</div>
+            </div>
             <div class="button-group">
                 <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 1)">
-                    ➕ +1
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+1</span>
                 </button>
                 <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 2)">
-                    ➕ +2
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+2</span>
                 </button>
                 <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 3)">
-                    ➕ +3
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+3</span>
                 </button>
                 <button class="btn btn-lg btn-success" onclick="addPoints('gaeste', 6)">
-                    ➕ +6
+                    <span class="btn-icon">➕</span>
+                    <span class="btn-text">+6</span>
                 </button>
             </div>
             <div class="button-group">
                 <button class="btn btn-lg btn-warning" onclick="addPoints('gaeste', -1)">
-                    ➖ -1
+                    <span class="btn-icon">➖</span>
+                    <span class="btn-text">-1</span>
                 </button>
                 <button class="btn btn-lg btn-warning" onclick="addPoints('gaeste', -2)">
-                    ➖ -2
+                    <span class="btn-icon">➖</span>
+                    <span class="btn-text">-2</span>
                 </button>
             </div>
         </div>
@@ -242,38 +248,29 @@
                 🔄 Alle Punkte zurücksetzen
             </button>
         </div>
-
-        <!-- LOCK BUTTON -->
-        <div class="action-buttons">
-            <button class="btn btn-secondary btn-lg" onclick="lockModeratorScoreboard()">
-                🔒 Sperren
-            </button>
-        </div>
     </div>
+    {% else %}
+    <div class="moderator-locked">
+        <p>🔒 Moderator-Bereich ist gesperrt</p>
+        <p style="font-size: 0.9em; color: #666;">Verwende den Moderator-Button in der Navigation zum Anmelden.</p>
     </div>
+    {% endif %}
 </section>
 
 <!-- SPIELÜBERSICHT MIT PUNKTE -->
 <section class="games-summary">
     <h2>🎮 Spielübersicht & Punkteverteilung</h2>
-    <table class="games-table">
-        <thead>
-            <tr>
-                <th>Spiel</th>
-                <th>Name</th>
-                <th>Punkte</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for game in games %}
-            <tr>
-                <td class="game-num">{{ game.number }}</td>
-                <td class="game-name">{{ game.name }}</td>
-                <td class="game-points">{{ game.punkte }} Punkte</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="points-grid">
+        {% for game in games %}
+        <div class="points-card">
+            <div class="points-card-header">
+                <span class="game-num">Spiel {{ game.number }}</span>
+                <span class="points-badge">{{ game.punkte }} 🎯</span>
+            </div>
+            <p class="game-name">{{ game.name }}</p>
+        </div>
+        {% endfor %}
+    </div>
 </section>
 
 <!-- NAVIGATION -->

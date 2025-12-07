@@ -56,6 +56,52 @@ scores = {
     'gaeste': 0
 }
 
+# ========== EBAY KLEINANZEIGEN KONFIGURATION ==========
+EBAY_FOLDER = 'static/ebay'
+ebay_images = []
+current_ebay_image_id = 0
+show_ebay_image = False
+
+def load_ebay_images():
+    """Lädt alle eBay-Bilder aus dem ebay-Ordner."""
+    global ebay_images
+    
+    import re
+    from pathlib import Path
+    
+    ebay_path = Path(EBAY_FOLDER)
+    if not ebay_path.exists():
+        return
+    
+    ebay_images = []
+    
+    for image_file in sorted(ebay_path.glob('*')):
+        if image_file.is_file() and image_file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif']:
+            filename_without_ext = image_file.stem
+            price_match = re.search(r'(\d+(?:[.,]\d{2})?)', filename_without_ext)
+            
+            if price_match:
+                price_str = price_match.group(1).replace(',', '.')
+                try:
+                    price = float(price_str)
+                    ebay_images.append({
+                        'id': len(ebay_images),
+                        'filename': image_file.name,
+                        'price': price
+                    })
+                except ValueError:
+                    pass
+
+def get_current_ebay_image():
+    """Gibt das aktuell aktive eBay-Bild zurück."""
+    global current_ebay_image_id
+    if 0 <= current_ebay_image_id < len(ebay_images):
+        return ebay_images[current_ebay_image_id]
+    return None
+
+# Lade eBay-Bilder beim Start
+load_ebay_images()
+
 # Spieldefinitionen mit Informationen
 games = [
     {
@@ -166,12 +212,35 @@ def get_top_image():
 @app.route('/')
 def index():
     """Startseite: David wird 30"""
-    return render_template('index.html')
+    is_moderator = session.get('moderator_authenticated', False)
+    return render_template('index.html', is_moderator=is_moderator)
 
 @app.route('/spieluebersicht')
 def spieluebersicht():
     """Übersicht aller Spiele."""
-    return render_template('spieluebersicht.html', games=games)
+    is_moderator = session.get('moderator_authenticated', False)
+    return render_template('spieluebersicht.html', games=games, is_moderator=is_moderator)
+
+# ========== ROUTES: MODERATOR AUTHENTICATION ==========
+
+@app.route('/moderator_login', methods=['POST'])
+def moderator_login():
+    """Moderator Login - setzt Session für alle Spiele."""
+    password = request.json.get('password', '') if request.is_json else request.form.get('password', '')
+    
+    if password == '123':  # Moderator-Passwort
+        session['moderator_authenticated'] = True
+        session['ebay_moderator'] = True
+        return jsonify({'success': True, 'message': 'Authentifiziert'})
+    
+    return jsonify({'success': False, 'error': 'Falsches Passwort'}), 401
+
+@app.route('/moderator_logout', methods=['POST'])
+def moderator_logout():
+    """Moderator Logout - löscht Session."""
+    session.pop('moderator_authenticated', None)
+    session.pop('ebay_moderator', None)
+    return jsonify({'success': True, 'message': 'Abgemeldet'})
 
 # ========== ROUTES: SPIEL-SEITEN ==========
 
@@ -182,11 +251,25 @@ def spiel(game_id):
     if not game:
         return "Spiel nicht gefunden", 404
     
+    is_moderator = session.get('moderator_authenticated', False)
+    
+    # Spiel6 (Was kostet der Spaß?) nutzt ein eigenes Template mit eBay-Bildern
+    if game_id == 'spiel6':
+        return render_template('was_kostet_der_spass.html',
+                             game=game,
+                             votes=votes.get(game_id, {}),
+                             next_game=get_next_game(game_id),
+                             current_image=get_current_ebay_image(),
+                             show_image=show_ebay_image,
+                             ebay_images=ebay_images,
+                             is_moderator=is_moderator)
+    
     next_game = get_next_game(game_id)
     return render_template('spiel.html', 
                          game=game, 
                          votes=votes.get(game_id, {}),
-                         next_game=next_game)
+                         next_game=next_game,
+                         is_moderator=is_moderator)
 
 # ========== ROUTES: VOTING-SYSTEM ==========
 
@@ -249,7 +332,8 @@ def set_game_winner(game_id, winner):
 @app.route('/scoreboard')
 def scoreboard():
     """Zeigt das Scoreboard mit Punktestand."""
-    return render_template('scoreboard.html', scores=scores, games=games)
+    is_moderator = session.get('moderator_authenticated', False)
+    return render_template('scoreboard.html', scores=scores, games=games, is_moderator=is_moderator)
 
 @app.route('/get_scores')
 def get_scores():
@@ -292,11 +376,13 @@ def total_punkte_filter(game_list):
 @app.route('/gewinnspiel')
 def gewinnspiel():
     """Zeigt die Gewinnspiel-Seite mit Upload und Galerie."""
+    is_moderator = session.get('moderator_authenticated', False)
     images = get_all_images_sorted()
     top_image = get_top_image()
     return render_template('gewinnspiel.html', 
                          images=images,
-                         top_image=top_image)
+                         top_image=top_image,
+                         is_moderator=is_moderator)
 
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
@@ -401,8 +487,51 @@ if __name__ == '__main__':
     
     Drücke Ctrl+C zum Beenden.
     """)
+
+# ========== ROUTES: EBAY IMAGE CONTROLS ==========
+
+@app.route('/ebay_show_image/<int:image_id>', methods=['POST'])
+def ebay_show_image(image_id):
+    """Zeigt ein eBay-Bild an (nur Moderator)."""
+    global current_ebay_image_id, show_ebay_image
+    
+    if not session.get('ebay_moderator', False):
+        return jsonify({'success': False, 'error': 'Nicht autorisiert'}), 403
+    
+    if 0 <= image_id < len(ebay_images):
+        current_ebay_image_id = image_id
+        show_ebay_image = True
+        return jsonify({'success': True, 'message': 'Bild angezeigt'})
+    
+    return jsonify({'success': False, 'error': 'Ungültige Bild-ID'}), 400
+
+@app.route('/ebay_hide_image', methods=['POST'])
+def ebay_hide_image():
+    """Versteckt das eBay-Bild (nur Moderator)."""
+    global show_ebay_image
+    
+    if not session.get('ebay_moderator', False):
+        return jsonify({'success': False, 'error': 'Nicht autorisiert'}), 403
+    
+    show_ebay_image = False
+    return jsonify({'success': True, 'message': 'Bild versteckt'})
+
+# ========== MAIN ==========
+
+if __name__ == '__main__':
+    print("""
+    ╔════════════════════════════════════════════════════════╗
+    ║   David's 30. Geburtstag - Partyspiele Web-App        ║
+    ╚════════════════════════════════════════════════════════╝
+    
+    🎉 Die App läuft unter: http://localhost:5000
+    
+    Tipp: 
+    - Auf dem Moderator-Laptop: http://localhost:5000
+    - Für Gäste: http://<deine-ip>:5000 (z.B. http://192.168.1.100:5000)
+    
+    Drücke Ctrl+C zum Beenden.
+    """)
     
     # Starte den Flask Development Server
-    # debug=True: Automatisches Reload bei Code-Änderungen
-    # host='0.0.0.0': Erreichbar von anderen Geräten im Netzwerk
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

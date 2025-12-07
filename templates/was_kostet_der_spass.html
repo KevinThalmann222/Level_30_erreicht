@@ -1,0 +1,292 @@
+{% extends "spiel.html" %}
+
+{% block content %}
+<script>
+    // Starte Auto-Update der Abstimmungen wenn die Seite geladen ist
+    document.addEventListener('DOMContentLoaded', function() {
+        startAutoUpdate('{{ game.id }}', 1000);
+    });
+</script>
+
+<div class="game-header-section">
+    <div class="game-badge">Spiel {{ game.number }} / 6</div>
+    <h1>{{ game.name }}</h1>
+    <p class="points-badge">💰 {{ game.punkte }} Punkte</p>
+</div>
+
+<!-- SPIELBESCHREIBUNG UND REGELN -->
+<section class="game-content">
+    <div class="game-info">
+        <h2>📝 Spielbeschreibung</h2>
+        <p class="description-text">{{ game.beschreibung }}</p>
+
+        <h3>📋 Spielregeln:</h3>
+        <ul class="rules-list">
+            {% for regel in game.regeln %}
+            <li>{{ regel }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- eBay IMAGE DISPLAY (controlled by moderator) -->
+    <div class="game-image-container">
+        {% if show_image and current_image %}
+            <img src="{{ url_for('static', filename='ebay/' + current_image.filename) }}" alt="eBay Inserat" class="game-image-large">
+        {% else %}
+            <img src="{{ url_for('static', filename='spiel' ~ game.number ~ '.png') }}" alt="{{ game.name }}" class="game-image-large">
+        {% endif %}
+    </div>
+</section>
+
+<!-- ABSTIMMUNGSBEREICH FÜR GÄSTE -->
+<section class="voting-section">
+    <h2>🗳️ Jetzt abstimmen!</h2>
+    <p class="voting-intro">Wer gewinnt dieses Spiel?</p>
+    
+    <div class="vote-buttons">
+        {% for option_id, option_name in game.voting_options %}
+        <button class="btn btn-vote" onclick="submitVote('{{ game.id }}', '{{ option_id }}')">
+            {{ option_name }}
+        </button>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- LIVE-ABSTIMMUNGSERGEBNISSE -->
+<section class="results-section">
+    <h2>📊 Live-Ergebnisse</h2>
+    <p class="results-info">Die Abstimmungen aktualisieren sich automatisch.</p>
+    <div id="votes-{{ game.id }}">
+        <div class="vote-results">
+            {% for option_id, option_name in game.voting_options %}
+            <div class="vote-item">
+                <span>{{ option_name }}: 0 (0%)</span>
+                <div class="vote-bar">
+                    <div class="vote-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- MODERATOR-BEREICH (RESET ABSTIMMUNGEN + eBay IMAGE CONTROLS) -->
+<section class="moderator-section">
+    <h2>🎛️ Moderator-Bereich</h2>
+    {% if is_moderator %}
+    <div id="moderator-unlocked" class="moderator-controls">
+        <!-- eBay IMAGE CONTROLS -->
+        {% if ebay_images %}
+        <div class="moderator-control-group">
+            <h3>🖼️ eBay Bild-Kontrolle:</h3>
+            <select id="image-select" class="moderator-password-input" style="margin-bottom: 1rem;">
+                <option value="">-- Wähle ein Bild --</option>
+                {% for img in ebay_images %}
+                    <option value="{{ img.id }}">{{ img.filename }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-primary" onclick="showEbayImage()">
+                👁️ Bild anzeigen
+            </button>
+            <button class="btn btn-warning" onclick="hideEbayImage()">
+                🙈 Bild verbergen
+            </button>
+            
+            <!-- Current Image Status -->
+            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 212, 255, 0.1); border: 2px solid rgba(0, 212, 255, 0.3); border-radius: 12px;">
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.95rem;">
+                    <strong>Aktuelles Bild:</strong>
+                </p>
+                <p id="current-image-name" style="margin: 0.5rem 0 0 0; color: var(--primary); font-weight: 600; font-size: 1.1rem;">
+                    {% if current_image %}
+                        {{ current_image.filename }}
+                    {% else %}
+                        Kein Bild aktiv
+                    {% endif %}
+                </p>
+                {% if current_image and is_moderator %}
+                <p style="margin: 1rem 0 0 0; padding-top: 1rem; border-top: 1px solid rgba(0, 212, 255, 0.2); color: var(--accent-green); font-weight: 600;">
+                    💰 Preis: {{ "%.2f"|format(current_image.price) }} €
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- GAME CONTROLS -->
+        <div class="moderator-control-group">
+            <h3>🗳️ Gewinner festlegen:</h3>
+            <button class="btn btn-success" onclick="setGameWinner('{{ game.id }}', 'david')">
+                ✅ David gewinnt ({{ game.punkte }} Punkte)
+            </button>
+            <button class="btn btn-primary" onclick="setGameWinner('{{ game.id }}', 'gaeste')">
+                ✅ Gäste gewinnen ({{ game.punkte }} Punkte)
+            </button>
+        </div>
+        <div class="moderator-control-group">
+            <button class="btn btn-warning" onclick="if(confirm('Abstimmungen wirklich zurücksetzen?')) { resetVotes('{{ game.id }}'); }">
+                🔄 Abstimmungen zurücksetzen
+            </button>
+        </div>
+        <div class="moderator-control-group">
+            <button class="btn btn-secondary" onclick="logoutModerator()">
+                🚪 Abmelden
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="moderator-locked">
+        <p>🔒 Moderator-Bereich ist gesperrt</p>
+        <p style="font-size: 0.9em; color: #666;">Verwende den Moderator-Button in der Navigation zum Anmelden.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- NÄCHSTES SPIEL -->
+{% if next_game %}
+<section class="next-game-section">
+    <h2>➡️ Nächstes Spiel</h2>
+    <div class="next-game-card">
+        <h3>{{ next_game.name }}</h3>
+        <p>{{ next_game.beschreibung }}</p>
+        <a href="{{ url_for('spiel', game_id=next_game.id) }}" class="btn btn-primary">
+            Zum nächsten Spiel →
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<!-- JAVASCRIPT FOR EBAY IMAGE CONTROLS -->
+<script>
+    const MODERATOR_PASSWORD = '123';
+
+    function unlockModerator() {
+        const password = document.getElementById('moderator-password').value;
+        
+        // Send to server for authentication
+        fetch('/moderator_login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) {
+                document.getElementById('moderator-locked').style.display = 'none';
+                document.getElementById('moderator-unlocked').style.display = 'flex';
+            } else {
+                alert('❌ Falsches Passwort!');
+                document.getElementById('moderator-password').value = '';
+            }
+        })
+        .catch(e => {
+            alert('Fehler: ' + e);
+            document.getElementById('moderator-password').value = '';
+        });
+    }
+
+    function logoutModerator() {
+        fetch('/moderator_logout', { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('moderator-locked').style.display = 'flex';
+            document.getElementById('moderator-unlocked').style.display = 'none';
+            document.getElementById('moderator-password').value = '';
+        });
+    }
+
+    function showEbayImage() {
+        const select = document.getElementById('image-select');
+        const imageId = select.value;
+        if (!imageId) {
+            alert('Bitte wähle ein Bild aus!');
+            return;
+        }
+        
+        // Get selected image name from dropdown
+        const imageName = select.options[select.selectedIndex].text;
+        
+        fetch(`/ebay_show_image/${imageId}`, { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    // Update current image display
+                    document.getElementById('current-image-name').textContent = imageName;
+                    location.reload();
+                } else {
+                    alert('Fehler: ' + d.error);
+                }
+            });
+    }
+
+    function hideEbayImage() {
+        fetch('/ebay_hide_image', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    document.getElementById('current-image-name').textContent = 'Kein Bild aktiv';
+                    location.reload();
+                } else {
+                    alert('Fehler: ' + d.error);
+                }
+            });
+    }
+
+    // Funktion zum Festlegen des Spielgewinners und automatisches Hinzufügen der Punkte
+    async function setGameWinner(gameId, winner) {
+        try {
+            const response = await fetch(`/set_game_winner/${gameId}/${winner}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                console.log('Scores:', data.scores);
+            } else {
+                alert('❌ Fehler: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Fehler beim Festlegen des Gewinners:', error);
+        }
+    }
+
+    // Funktion zum Zurücksetzen der Abstimmungen
+    async function resetVotes(gameId) {
+        try {
+            const response = await fetch(`/reset_votes/${gameId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            if (data.success) {
+                console.log('Votes reset:', data.message);
+                location.reload();
+            } else {
+                alert('❌ Fehler: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Fehler beim Zurücksetzen der Abstimmungen:', error);
+        }
+    }
+
+    // Enter-Taste für Passwort-Input aktivieren
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('moderator-password');
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    unlockModerator();
+                }
+            });
+        }
+    });
+</script>
+
+{% endblock %}
