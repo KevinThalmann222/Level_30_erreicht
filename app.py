@@ -5,23 +5,46 @@ Eine interaktive Web-Anwendung für Partyspiele mit Abstimmungssystem und Scoreb
 
 Ausführung:
 -----------
-1. Stelle sicher, dass Flask installiert ist: pip install flask
+1. Stelle sicher, dass Flask installiert ist: pip install -r requirements.txt
 2. Führe aus: python app.py
 3. Öffne in deinem Browser: http://localhost:5000
 
 Die App läuft auf deinem Laptop als Moderator.
 Gäste können von ihren Telefonen aus unter der gleichen IP-Adresse abstimmen.
+
+PRODUKTION:
+-----------
+Für Produktionsdeployment verwende einen WSGI-Server wie Gunicorn:
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
 """
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 from werkzeug.utils import secure_filename
 from uuid import uuid4
+import logging
 
 app = Flask(__name__)
-app.secret_key = 'david_wird_30_secret_key_2025'
+
+# ========== SICHERHEITSKONFIGURATION ==========
+# Secret key für Session-Management
+app.secret_key = os.environ.get('SECRET_KEY', 'david_wird_30_secret_key_2025')
+
+# Session-Konfiguration
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', False)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+
+# Logging-Setup
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # ========== GEWINNSPIEL KONFIGURATION ==========
 UPLOAD_FOLDER = 'static/uploads'
@@ -118,8 +141,8 @@ games = [
         'number': 2,
         'name': 'Lach doch mal!',
         'punkte': 5,
-        'beschreibung': 'David versucht, einen Gast zum Lachen zu bringen, ohne selbst zu lachen.',
-        'regeln': ['David hat 60 Sekunden Zeit, einen Gast zum Lachen zu bringen.', 'David darf nicht selbst lachen.', 'Die Zuschauer stimmen ab: Wer gewinnt?'],
+        'beschreibung': 'David versucht, einen Gast seiner Wahl zum Lachen zu bringen, ohne selbst zu lachen.',
+        'regeln': ['David hat 60 Sekunden Zeit, einen Gast seiner Wahl zum Lachen zu bringen.', 'David darf nicht selbst lachen.', 'Die Zuschauer stimmen ab: Wer gewinnt?'],
         'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
     },
     {
@@ -127,7 +150,7 @@ games = [
         'number': 3,
         'name': 'Blind Artist',
         'punkte': 4,
-        'beschreibung': 'Blindfolded, David und ein Gast zeichnen basierend auf Anweisungen. Wer malt besser?',
+        'beschreibung': 'Blindfolded, David und ein Gast seiner Wahl zeichnen basierend auf Anweisungen von Kevin. Wer malt besser?',
         'regeln': ['Beiden Spielern werden die Augen verbunden.', 'Ein Thema wird vorgegeben (z.B. "Katze").', 'Nach 2 Minuten wird bewertet: Wer hat das bessere Kunstwerk geschaffen?'],
         'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
     },
@@ -136,8 +159,8 @@ games = [
         'number': 4,
         'name': 'Wissensduell',
         'punkte': 3,
-        'beschreibung': 'David gegen das Team Publikum im Quiz-Duell. Wer kennt die Antworten?',
-        'regeln': ['Es werden 5 Fragen gestellt.', 'David antwortet allein.', 'Das Team Publikum diskutiert und gibt eine gemeinsame Antwort.', 'Die Zuschauer stimmen ab: Wer hat gewonnen?'],
+        'beschreibung': 'David gegen ein 3er Team seiner Wahl im Quiz-Duell. Wer kennt die Antworten?',
+        'regeln': ['Es werden 5 Fragen gestellt.', 'David antwortet allein.', 'Das Team diskutiert und gibt eine gemeinsame Antwort.', 'Wer mehr richtige Antworten hat, gewinnt.'],
         'voting_options': [('david', 'David gewinnt'), ('team', 'Team Publikum gewinnt')]
     },
     {
@@ -146,7 +169,7 @@ games = [
         'name': 'Den Song kenn ich',
         'punkte': 2,
         'beschreibung': 'Musikraten-Duell: David gegen Gast. Wer kennt die Songs?',
-        'regeln': ['Es werden 5 Musik-Snippets vorgespielt.', 'Der erste, der die richtige Antwort gibt, erhält einen Punkt.', 'Die Zuschauer stimmen ab: Wer gewinnt?'],
+        'regeln': ['Es werden 5 Musik-Snippets vorgespielt.', 'Der erste, der die richtige Antwort gibt, erhält einen Punkt.', 'Wer am Ende mehr Punkte hat, gewinnt.'],
         'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
     },
     {
@@ -155,7 +178,7 @@ games = [
         'name': 'Was kostet der Spaß?',
         'punkte': 1,
         'beschreibung': 'Schätzspiel: David und Gäste raten Preise. Wer ist am nächsten dran?',
-        'regeln': ['Verschiedene Gegenstände werden gezeigt.', 'Alle müssen den Preis schätzen.', 'Wer am nächsten am echten Preis liegt, erhält 1 Punkt.', 'Die Zuschauer stimmen ab: Wer gewinnt?'],
+        'regeln': ['Verschiedene Gegenstände werden gezeigt.', 'Beide müssen den Preis schätzen.', 'Wer am nächsten am echten Preis liegt, erhält 1 Punkt.'],
         'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
     }
 ]
@@ -531,7 +554,25 @@ if __name__ == '__main__':
     - Für Gäste: http://<deine-ip>:5000 (z.B. http://192.168.1.100:5000)
     
     Drücke Ctrl+C zum Beenden.
+    
+    PRODUKTIONSHINWEIS:
+    - Für Production verwende: gunicorn -w 4 -b 0.0.0.0:5000 app:app
     """)
     
+    # Development vs Production
+    is_production = os.environ.get('FLASK_ENV') == 'production'
+    debug_mode = not is_production and os.environ.get('FLASK_DEBUG', True)
+    
+    # Get configuration from environment
+    host = os.environ.get('FLASK_HOST', '0.0.0.0')
+    port = int(os.environ.get('FLASK_PORT', 5000))
+    
+    logger.info(f"Flask App Start - Production: {is_production}, Debug: {debug_mode}")
+    
     # Starte den Flask Development Server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(
+        debug=debug_mode,
+        host=host,
+        port=port,
+        threaded=True
+    )

@@ -23,22 +23,47 @@
                 <li><a href="/scoreboard" class="nav-scoreboard">🏆 Scoreboard</a></li>
                 <li><a href="/gewinnspiel">🎉 Gewinnspiel</a></li>
                 {% if is_moderator %}
-                <li><button class="btn btn-logout" onclick="logoutModerator()" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">🚪 Abmelden</button></li>
+                <li><button class="btn-nav btn-logout-nav" onclick="logoutModerator()">🚪 Abmelden</button></li>
                 {% else %}
-                <li><button class="btn btn-login" onclick="showModeratorLogin()" style="background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">🔓 Moderator</button></li>
+                <li><button class="btn-nav btn-login-nav" onclick="showModeratorLogin()">🔓 Moderator</button></li>
                 {% endif %}
             </ul>
         </div>
     </nav>
 
-    <!-- MODERATOR LOGIN MODAL -->
-    <div id="moderator-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 90%; max-width: 300px;">
-            <h2 style="margin-top: 0; text-align: center;">🔐 Moderator Login</h2>
-            <input type="password" id="mod-password" placeholder="Passwort" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;" onkeypress="if(event.key==='Enter') loginModerator()">
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button onclick="loginModerator()" style="flex: 1; background: #28a745; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">✓ Login</button>
-                <button onclick="closeModeratorLogin()" style="flex: 1; background: #6c757d; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">✕ Abbrechen</button>
+    <!-- MODERATOR LOGIN MODAL - ENHANCED DESIGN -->
+    <div id="moderator-modal" class="moderator-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content login-modal">
+            <div class="modal-header-gradient"></div>
+            
+            <div class="modal-body">
+                <div class="login-icon">🔐</div>
+                <h2>Moderator Login</h2>
+                <p class="login-subtitle">Geben Sie das Passwort ein um Zugriff zu erhalten</p>
+                
+                <div class="password-input-group">
+                    <input 
+                        type="password" 
+                        id="mod-password" 
+                        class="password-input"
+                        placeholder="••••••••"
+                        onkeypress="if(event.key==='Enter') loginModerator()"
+                        autocomplete="off"
+                    >
+                    <span class="input-icon">🔑</span>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-modal btn-login-confirm" onclick="loginModerator()">
+                        <span class="btn-icon">✓</span>
+                        Anmelden
+                    </button>
+                    <button class="btn-modal btn-login-cancel" onclick="closeModeratorLogin()">
+                        <span class="btn-icon">✕</span>
+                        Abbrechen
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -113,12 +138,14 @@
         // ===== MODERATOR LOGIN/LOGOUT FUNCTIONS =====
         
         function showModeratorLogin() {
-            document.getElementById('moderator-modal').style.display = 'flex';
+            const modal = document.getElementById('moderator-modal');
+            modal.classList.add('active');
             setTimeout(() => document.getElementById('mod-password').focus(), 100);
         }
 
         function closeModeratorLogin() {
-            document.getElementById('moderator-modal').style.display = 'none';
+            const modal = document.getElementById('moderator-modal');
+            modal.classList.remove('active');
             document.getElementById('mod-password').value = '';
         }
 
@@ -156,9 +183,9 @@
             });
         }
 
-        // Close modal when clicking outside
+        // Close modal when clicking on backdrop
         document.getElementById('moderator-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
+            if (e.target.classList.contains('modal-backdrop')) {
                 closeModeratorLogin();
             }
         });

@@ -718,6 +718,138 @@ section h3 {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(181, 55, 242, 0.05));
+    border: 2px solid rgba(0, 212, 255, 0.15);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+    animation: shimmer 3s infinite;
+}
+
+.game-info h2 {
+    color: var(--primary);
+    font-size: 1.6rem;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.game-info h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 24px;
+    background: linear-gradient(180deg, var(--primary), var(--accent));
+    border-radius: 2px;
+}
+
+.game-info h3 {
+    color: var(--accent-green);
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.8rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    text-shadow: 0 0 15px rgba(0, 255, 163, 0.2);
+}
+
+.game-info h3::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, var(--accent-green), var(--accent-yellow));
+    border-radius: 2px;
+}
+
+.description-text {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin: 0;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    transition: var(--transition-fast);
+}
+
+.description-text:hover {
+    background: rgba(0, 212, 255, 0.08);
+    border-left-color: var(--accent-green);
+}
+
+.rules-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.rules-list li {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(0, 255, 163, 0.08), rgba(0, 212, 255, 0.08));
+    border: 1px solid rgba(0, 255, 163, 0.2);
+    border-radius: 12px;
+    border-left: 4px solid var(--accent-green);
+    position: relative;
+    padding-left: 2rem;
+    transition: var(--transition-fast);
+}
+
+.rules-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent-green);
+    font-weight: 900;
+    font-size: 1.2rem;
+}
+
+.rules-list li:hover {
+    background: linear-gradient(135deg, rgba(0, 255, 163, 0.15), rgba(0, 212, 255, 0.15));
+    border-color: var(--accent-green);
+    border-left-color: var(--accent-yellow);
+    box-shadow: 0 0 20px rgba(0, 255, 163, 0.2);
+    transform: translateX(8px);
+}
+
+.rules-list li:nth-child(even) {
+    border-left-color: var(--accent-yellow);
+}
+
+.rules-list li:nth-child(even) > * {
+    color: var(--accent-yellow);
+}
+
+.rules-list li:nth-child(3n) {
+    border-left-color: var(--primary);
+}
+
+.rules-list li:nth-child(3n) > * {
+    color: var(--primary);
 }
 
 .game-image-container {
@@ -1638,6 +1770,28 @@ select.moderator-password-input option:checked {
         gap: 1.5rem;
     }
 
+    .game-info {
+        padding: 1.5rem;
+    }
+
+    .game-info h2 {
+        font-size: 1.4rem;
+    }
+
+    .game-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .description-text {
+        font-size: 1rem;
+        padding: 0.8rem;
+    }
+
+    .rules-list li {
+        font-size: 0.95rem;
+        padding: 0.8rem 0.8rem 0.8rem 1.8rem;
+    }
+
     .game-image-large {
         max-width: 100%;
         max-height: 400px;
@@ -2388,5 +2542,307 @@ select.moderator-password-input option:checked {
 
     .btn-danger {
         width: 100%;
+    }
+}
+
+/* ============================================
+   MODERATOR LOGIN MODAL - MODERN DESIGN
+   ============================================ */
+
+.moderator-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.moderator-modal.active {
+    display: flex;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 14, 39, 0.8);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: relative;
+    z-index: 1001;
+    background: linear-gradient(135deg, var(--bg-card), rgba(20, 24, 41, 0.95));
+    border: 2px solid var(--primary);
+    border-radius: 24px;
+    box-shadow: 
+        0 20px 60px rgba(0, 212, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    width: 90%;
+    max-width: 420px;
+    overflow: hidden;
+    animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: scale(0.9) translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.login-modal {
+    max-width: 380px;
+}
+
+.modal-header-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+    animation: shimmer 3s infinite;
+}
+
+.modal-body {
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.login-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    animation: iconBounce 2s infinite;
+    display: inline-block;
+}
+
+@keyframes iconBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.modal-body h2 {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.login-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.4;
+}
+
+.password-input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.password-input {
+    width: 100%;
+    padding: 14px 16px 14px 45px;
+    font-size: 1.1rem;
+    letter-spacing: 0.2em;
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+    transition: var(--transition-fast);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.password-input::placeholder {
+    color: var(--text-muted);
+}
+
+.password-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(0, 212, 255, 0.05);
+    box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-modal {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid currentColor;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-modal:hover::before {
+    left: 100%;
+}
+
+.btn-login-confirm {
+    background: linear-gradient(135deg, rgba(0, 255, 163, 0.15), rgba(0, 208, 132, 0.15));
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+    box-shadow: 0 0 15px rgba(0, 255, 163, 0.2);
+}
+
+.btn-login-confirm:hover {
+    background: linear-gradient(135deg, rgba(0, 255, 163, 0.25), rgba(0, 208, 132, 0.25));
+    box-shadow: 0 0 25px rgba(0, 255, 163, 0.4), inset 0 0 10px rgba(0, 255, 163, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-login-confirm:active {
+    transform: translateY(0);
+}
+
+.btn-login-cancel {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.2), rgba(108, 117, 125, 0.2));
+    border-color: var(--text-muted);
+    color: var(--text-muted);
+    transition: var(--transition-fast);
+}
+
+.btn-login-cancel:hover {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.3), rgba(108, 117, 125, 0.3));
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
+    box-shadow: 0 0 15px rgba(108, 117, 125, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-login-cancel:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* Navigation Button Styling */
+.btn-nav {
+    background: none;
+    border: none;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-login-nav {
+    color: var(--accent-green);
+    border: 2px solid var(--accent-green);
+    background: linear-gradient(135deg, rgba(0, 255, 163, 0.1), rgba(0, 208, 132, 0.1));
+    box-shadow: 0 0 10px rgba(0, 255, 163, 0.2);
+}
+
+.btn-login-nav:hover {
+    background: linear-gradient(135deg, rgba(0, 255, 163, 0.2), rgba(0, 208, 132, 0.2));
+    box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
+    transform: scale(1.05);
+}
+
+.btn-logout-nav {
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.1), rgba(220, 53, 69, 0.1));
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.2);
+}
+
+.btn-logout-nav:hover {
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.2), rgba(220, 53, 69, 0.2));
+    box-shadow: 0 0 20px rgba(255, 0, 110, 0.4);
+    transform: scale(1.05);
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-width: 340px;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .login-icon {
+        font-size: 3rem;
+    }
+
+    .modal-body h2 {
+        font-size: 1.5rem;
+    }
+
+    .password-input {
+        padding: 12px 14px 12px 40px;
+        font-size: 1rem;
     }
 }
