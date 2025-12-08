@@ -103,13 +103,25 @@ def load_ebay_images():
     ebay_images = []
     
     try:
-        for image_file in sorted(ebay_path.glob('*')):
+        logger.info(f"Attempting to load eBay images from: {ebay_path.absolute()}")
+        
+        # List all files in the directory
+        all_files = list(ebay_path.glob('*'))
+        logger.info(f"Files in {EBAY_FOLDER}: {[f.name for f in all_files]}")
+        
+        for image_file in sorted(all_files):
+            logger.info(f"Processing file: {image_file.name}")
+            
             if image_file.is_file() and image_file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif']:
                 filename_without_ext = image_file.stem
+                logger.info(f"  Filename stem: {filename_without_ext}")
+                
+                # Try to extract price from filename
                 price_match = re.search(r'(\d+(?:[.,]\d{2})?)', filename_without_ext)
                 
                 if price_match:
                     price_str = price_match.group(1).replace(',', '.')
+                    logger.info(f"  Found price: {price_str}")
                     try:
                         price = float(price_str)
                         ebay_images.append({
@@ -117,12 +129,17 @@ def load_ebay_images():
                             'filename': image_file.name,
                             'price': price
                         })
-                    except ValueError:
-                        pass
+                        logger.info(f"  ✓ Added to ebay_images: {image_file.name} (Price: {price}€)")
+                    except ValueError as e:
+                        logger.warning(f"  ✗ Failed to parse price '{price_str}': {e}")
+                else:
+                    logger.warning(f"  ✗ No price pattern found in '{filename_without_ext}'")
         
-        logger.info(f"Loaded {len(ebay_images)} eBay images from {EBAY_FOLDER}")
+        logger.info(f"✅ Loaded {len(ebay_images)} eBay images from {EBAY_FOLDER}")
+        if ebay_images:
+            logger.info(f"   Images: {[img['filename'] for img in ebay_images]}")
     except Exception as e:
-        logger.error(f"Error loading eBay images: {e}")
+        logger.error(f"❌ Error loading eBay images: {e}", exc_info=True)
 
 def get_current_ebay_image():
     """Gibt das aktuell aktive eBay-Bild zurück."""
