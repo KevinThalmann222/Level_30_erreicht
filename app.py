@@ -167,11 +167,29 @@ games = [
     {
         'id': 'spiel2',
         'number': 2,
-        'name': 'Lach doch mal!',
+        'name': 'Lach doch mal! – Die Lach-Challenge',
         'punkte': 5,
-        'beschreibung': 'David versucht, einen Gast seiner Wahl zum Lachen zu bringen, ohne selbst zu lachen.',
-        'regeln': ['David hat 60 Sekunden Zeit, einen Gast seiner Wahl zum Lachen zu bringen.', 'David darf nicht selbst lachen.', 'Die Zuschauer stimmen ab: Wer gewinnt?'],
-        'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
+        'beschreibung': (
+            'David wählt drei Gäste aus, die er in einer 60-Sekunden-Challenge '
+            'zum Lachen bringen muss. Dabei darf er selbst nicht lachen. '
+            'Mindestens zwei der drei ausgewählten Personen müssen lachen – '
+            'und zusätzlich muss das Publikum mehrheitlich zustimmen, dass David '
+            'lustig war.'
+        ),
+        'regeln': [
+            'David wählt drei Gäste aus, die an der Lach-Challenge teilnehmen.',
+            'David hat 60 Sekunden Zeit, um diese drei Personen zum Lachen zu bringen.',
+            'Mindestens zwei der drei Teilnehmer müssen lachen, damit David überhaupt eine Chance auf den Sieg hat.',
+            'David darf während der gesamten Challenge nicht lachen.',
+            'Nach der Zeit stimmt das Publikum ab, ob sie Davids Performance lustig fanden.',
+            'Nur wenn die Mehrheit des Publikums für David stimmt UND mindestens zwei Gäste gelacht haben, gewinnt David das Spiel.',
+            'Falls diese Bedingungen nicht erfüllt werden, gewinnen die Gäste.'
+        ],
+        'voting_options': [
+            ('david', 'David gewinnt'),
+            ('gaeste', 'Die Gäste gewinnen'),
+            ('unentschieden', 'Unentschieden / keine klare Mehrheit')
+        ]
     },
     {
         'id': 'spiel3',
@@ -205,17 +223,31 @@ games = [
         'name': 'Wissensduell',
         'punkte': 3,
         'beschreibung': 'David gegen ein 3er Team seiner Wahl im Quiz-Duell. Wer kennt die Antworten?',
-        'regeln': ['Es werden 5 Fragen gestellt.', 'David antwortet allein.', 'Das Team diskutiert und gibt eine gemeinsame Antwort.', 'Wer mehr richtige Antworten hat, gewinnt.'],
+        'regeln': ['Es werden 3 Fragen gestellt.', 'David antwortet allein.', 'Das Team diskutiert und gibt eine gemeinsame Antwort.', 'Wer mehr richtige Antworten hat, gewinnt.'],
         'voting_options': [('david', 'David gewinnt'), ('team', 'Team Publikum gewinnt')]
     },
     {
         'id': 'spiel5',
         'number': 5,
-        'name': 'Den Song kenn ich',
+        'name': 'Den Song kenn ich!',
         'punkte': 2,
-        'beschreibung': 'Musikraten-Duell: David gegen Gast. Wer kennt die Songs?',
-        'regeln': ['Es werden 5 Musik-Snippets vorgespielt.', 'Der erste, der die richtige Antwort gibt, erhält einen Punkt.', 'Wer am Ende mehr Punkte hat, gewinnt.'],
-        'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
+        'beschreibung': (
+            'David wählt eine Person aus dem Publikum aus und tritt gegen sie im Musikraten an. '
+            'Es werden drei Runden gespielt. Wer einen Song zuerst richtig erkennt, bekommt den Punkt.'
+        ),
+        'regeln': [
+            'David wählt eine Person aus dem Publikum als Gegner/in.',
+            'Es werden insgesamt 3 Musik-Snippets abgespielt.',
+            'Sobald ein Snippet läuft, dürfen beide sofort raten.',
+            'Wer zuerst den richtigen Songtitel (oder klar erkennbaren Interpreten) nennt, erhält 1 Punkt.',
+            'Nach drei Runden gewinnt die Person mit den meisten Punkten.',
+            'Bei Gleichstand gibt es ein kurzes Stechen mit einem vierten Snippet.'
+        ],
+        'voting_options': [
+            ('david', 'David gewinnt'),
+            ('gast', 'Gast gewinnt'),
+            ('unentschieden', 'Unentschieden / Stechen nötig')
+        ]
     },
     {
         'id': 'spiel6',
