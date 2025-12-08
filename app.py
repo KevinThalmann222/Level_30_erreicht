@@ -81,6 +81,10 @@ scores = {
 
 # ========== EBAY KLEINANZEIGEN KONFIGURATION ==========
 EBAY_FOLDER = 'static/ebay'
+
+# Ensure ebay folder exists
+os.makedirs(EBAY_FOLDER, exist_ok=True)
+
 ebay_images = []
 current_ebay_image_id = 0
 show_ebay_image = False
@@ -92,32 +96,33 @@ def load_ebay_images():
     import re
     from pathlib import Path
     
+    # Ensure folder exists
     ebay_path = Path(EBAY_FOLDER)
-    if not ebay_path.exists():
-        logger.warning(f"eBay folder does not exist: {EBAY_FOLDER}")
-        ebay_images = []
-        return
+    os.makedirs(EBAY_FOLDER, exist_ok=True)
     
     ebay_images = []
     
-    for image_file in sorted(ebay_path.glob('*')):
-        if image_file.is_file() and image_file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif']:
-            filename_without_ext = image_file.stem
-            price_match = re.search(r'(\d+(?:[.,]\d{2})?)', filename_without_ext)
-            
-            if price_match:
-                price_str = price_match.group(1).replace(',', '.')
-                try:
-                    price = float(price_str)
-                    ebay_images.append({
-                        'id': len(ebay_images),
-                        'filename': image_file.name,
-                        'price': price
-                    })
-                except ValueError:
-                    pass
-    
-    logger.info(f"Loaded {len(ebay_images)} eBay images from {EBAY_FOLDER}")
+    try:
+        for image_file in sorted(ebay_path.glob('*')):
+            if image_file.is_file() and image_file.suffix.lower() in ['.jpg', '.jpeg', '.png', '.gif']:
+                filename_without_ext = image_file.stem
+                price_match = re.search(r'(\d+(?:[.,]\d{2})?)', filename_without_ext)
+                
+                if price_match:
+                    price_str = price_match.group(1).replace(',', '.')
+                    try:
+                        price = float(price_str)
+                        ebay_images.append({
+                            'id': len(ebay_images),
+                            'filename': image_file.name,
+                            'price': price
+                        })
+                    except ValueError:
+                        pass
+        
+        logger.info(f"Loaded {len(ebay_images)} eBay images from {EBAY_FOLDER}")
+    except Exception as e:
+        logger.error(f"Error loading eBay images: {e}")
 
 def get_current_ebay_image():
     """Gibt das aktuell aktive eBay-Bild zurück."""
