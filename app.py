@@ -94,6 +94,8 @@ def load_ebay_images():
     
     ebay_path = Path(EBAY_FOLDER)
     if not ebay_path.exists():
+        logger.warning(f"eBay folder does not exist: {EBAY_FOLDER}")
+        ebay_images = []
         return
     
     ebay_images = []
@@ -114,6 +116,8 @@ def load_ebay_images():
                     })
                 except ValueError:
                     pass
+    
+    logger.info(f"Loaded {len(ebay_images)} eBay images from {EBAY_FOLDER}")
 
 def get_current_ebay_image():
     """Gibt das aktuell aktive eBay-Bild zurück."""
@@ -388,6 +392,17 @@ def reset_scores():
     return jsonify({'success': True, 'scores': scores})
 
 # ========== HILFSFUNKTIONEN FÜR TEMPLATES ==========
+
+@app.route('/debug_ebay_images')
+def debug_ebay_images():
+    """Debug endpoint to check eBay images loaded."""
+    return jsonify({
+        'ebay_folder': EBAY_FOLDER,
+        'ebay_images_count': len(ebay_images),
+        'ebay_images': ebay_images,
+        'current_image': get_current_ebay_image(),
+        'show_image': show_ebay_image
+    })
 
 @app.template_filter('totalpunkte')
 def total_punkte_filter(game_list):
