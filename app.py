@@ -177,7 +177,7 @@ games = [
         'number': 6,
         'name': 'Was kostet der Spaß?',
         'punkte': 1,
-        'beschreibung': 'Schätzspiel: David und Gäste raten Preise. Wer ist am nächsten dran?',
+        'beschreibung': 'Schätzspiel: David und Gäste raten Preise. Wer ist am nächsten dran? Alle Gäste können teilnehmen!',
         'regeln': ['Verschiedene Gegenstände werden gezeigt.', 'Beide müssen den Preis schätzen.', 'Wer am nächsten am echten Preis liegt, erhält 1 Punkt.'],
         'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
     }
