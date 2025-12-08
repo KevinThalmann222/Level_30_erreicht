@@ -80,7 +80,9 @@ scores = {
 }
 
 # ========== EBAY KLEINANZEIGEN KONFIGURATION ==========
-EBAY_FOLDER = 'static/ebay'
+# Use absolute path to ensure it works on PythonAnywhere and local
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+EBAY_FOLDER = os.path.join(APP_ROOT, 'static', 'ebay')
 
 # Ensure ebay folder exists
 os.makedirs(EBAY_FOLDER, exist_ok=True)
