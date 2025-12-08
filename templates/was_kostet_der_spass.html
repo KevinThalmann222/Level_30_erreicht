@@ -82,33 +82,55 @@
         </p>
         {% endif %}
         
-        <!-- eBay IMAGE CONTROLS -->
-        {% if ebay_images %}
+        <!-- eBay IMAGE CONTROLS - HORIZONTAL SCROLLABLE GALLERY -->
         <div class="moderator-control-group">
             <h3>🖼️ eBay Bild-Kontrolle:</h3>
-            <select id="image-select" class="moderator-password-input" style="margin-bottom: 1rem;">
-                <option value="">-- Wähle ein Bild --</option>
-                {% for img in ebay_images %}
-                    <option value="{{ img.id }}">{{ img.filename }}</option>
-                {% endfor %}
-            </select>
-            <button class="btn btn-primary" onclick="showEbayImage()">
-                👁️ Bild anzeigen
-            </button>
-            <button class="btn btn-warning" onclick="hideEbayImage()">
-                🙈 Bild verbergen
-            </button>
+            
+            <!-- Image Gallery Container -->
+            <div class="ebay-gallery-container">
+                <button class="ebay-scroll-btn ebay-scroll-left" onclick="scrollEbayGallery('left')">◄</button>
+                
+                <div class="ebay-gallery-wrapper">
+                    <div class="ebay-gallery">
+                        {% if ebay_images %}
+                            {% for img in ebay_images %}
+                            <div class="ebay-gallery-item" onclick="selectAndShowEbayImage({{ img.id }}, '{{ img.filename }}')">
+                                <img src="{{ url_for('static', filename='ebay/' + img.filename) }}" alt="{{ img.filename }}" class="ebay-thumbnail">
+                                <div class="ebay-item-info">
+                                    <p class="ebay-price">💰 {{ "%.2f"|format(img.price) }} €</p>
+                                    <p class="ebay-filename">{{ img.filename }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: #888; padding: 2rem; text-align: center; grid-column: 1/-1;">Keine eBay-Bilder gefunden</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <button class="ebay-scroll-btn ebay-scroll-right" onclick="scrollEbayGallery('right')">►</button>
+            </div>
+            
+            <!-- Control Buttons -->
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="showSelectedEbayImage()">
+                    👁️ Ausgewähltes Bild anzeigen
+                </button>
+                <button class="btn btn-warning" onclick="hideEbayImage()">
+                    🙈 Bild verbergen
+                </button>
+            </div>
             
             <!-- Current Image Status -->
             <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 212, 255, 0.1); border: 2px solid rgba(0, 212, 255, 0.3); border-radius: 12px;">
                 <p style="margin: 0; color: var(--text-secondary); font-size: 0.95rem;">
-                    <strong>Aktuelles Bild:</strong>
+                    <strong>Aktuell ausgewähltes Bild:</strong>
                 </p>
                 <p id="current-image-name" style="margin: 0.5rem 0 0 0; color: var(--primary); font-weight: 600; font-size: 1.1rem;">
                     {% if current_image %}
                         {{ current_image.filename }}
                     {% else %}
-                        Kein Bild aktiv
+                        Klicke auf ein Bild zum Auswählen
                     {% endif %}
                 </p>
                 {% if current_image and is_moderator %}
@@ -118,7 +140,6 @@
                 {% endif %}
             </div>
         </div>
-        {% endif %}
 
         <!-- GAME CONTROLS -->
         <div class="moderator-control-group">
@@ -166,6 +187,9 @@
 <!-- JAVASCRIPT FOR EBAY IMAGE CONTROLS -->
 <script>
     const MODERATOR_PASSWORD = '123';
+    
+    // Track selected image ID
+    let selectedImageId = null;
 
     function unlockModerator() {
         const password = document.getElementById('moderator-password').value;
@@ -204,28 +228,53 @@
         });
     }
 
-    function showEbayImage() {
-        const select = document.getElementById('image-select');
-        const imageId = select.value;
-        if (!imageId) {
-            alert('Bitte wähle ein Bild aus!');
+    // Scroll gallery left/right
+    function scrollEbayGallery(direction) {
+        const gallery = document.querySelector('.ebay-gallery');
+        const scrollAmount = 300;
+        
+        if (direction === 'left') {
+            gallery.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        } else {
+            gallery.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    }
+
+    // Select an image from gallery
+    function selectAndShowEbayImage(imageId, filename) {
+        selectedImageId = imageId;
+        
+        // Update UI - highlight selected item
+        document.querySelectorAll('.ebay-gallery-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        event.currentTarget.classList.add('selected');
+        
+        // Update current image display
+        document.getElementById('current-image-name').textContent = filename;
+    }
+
+    // Show the selected image
+    function showSelectedEbayImage() {
+        if (selectedImageId === null) {
+            alert('Bitte wähle ein Bild aus der Galerie!');
             return;
         }
         
-        // Get selected image name from dropdown
-        const imageName = select.options[select.selectedIndex].text;
-        
-        fetch(`/ebay_show_image/${imageId}`, { method: 'POST' })
+        fetch(`/ebay_show_image/${selectedImageId}`, { method: 'POST' })
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
-                    // Update current image display
-                    document.getElementById('current-image-name').textContent = imageName;
                     location.reload();
                 } else {
                     alert('Fehler: ' + d.error);
                 }
             });
+    }
+
+    function showEbayImage() {
+        // Legacy function for backward compatibility
+        showSelectedEbayImage();
     }
 
     function hideEbayImage() {

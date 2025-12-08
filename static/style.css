@@ -2846,3 +2846,178 @@ select.moderator-password-input option:checked {
         font-size: 1rem;
     }
 }
+
+/* ============================================
+   eBay IMAGE GALLERY - HORIZONTAL SCROLLABLE
+   ============================================ */
+
+.ebay-gallery-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    background: rgba(0, 212, 255, 0.05);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.ebay-scroll-btn {
+    background: var(--primary);
+    color: var(--bg-dark);
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.ebay-scroll-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+}
+
+.ebay-scroll-btn:active {
+    transform: scale(0.95);
+}
+
+.ebay-gallery-wrapper {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.ebay-gallery {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 1fr);
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 0.5rem 0;
+    
+    /* Hide scrollbar */
+    scrollbar-width: none;
+}
+
+.ebay-gallery::-webkit-scrollbar {
+    display: none;
+}
+
+.ebay-gallery-item {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(255, 0, 110, 0.1) 100%);
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+    position: relative;
+}
+
+.ebay-gallery-item:hover {
+    opacity: 0.9;
+    border-color: var(--primary);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 212, 255, 0.3);
+}
+
+.ebay-gallery-item.selected {
+    opacity: 1;
+    border-color: var(--accent-green);
+    background: linear-gradient(135deg, rgba(0, 255, 163, 0.15) 0%, rgba(0, 212, 255, 0.15) 100%);
+    box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
+}
+
+.ebay-gallery-item.selected::before {
+    content: '✓';
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--accent-green);
+    color: var(--bg-dark);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.ebay-thumbnail {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.ebay-item-info {
+    padding: 0.5rem 0;
+    text-align: center;
+}
+
+.ebay-price {
+    font-weight: 600;
+    color: var(--accent-green);
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.ebay-filename {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin: 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .ebay-gallery-container {
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .ebay-scroll-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+    }
+
+    .ebay-gallery {
+        grid-auto-columns: minmax(150px, 1fr);
+        gap: 0.75rem;
+    }
+
+    .ebay-thumbnail {
+        height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ebay-gallery {
+        grid-auto-columns: minmax(130px, 1fr);
+        gap: 0.5rem;
+    }
+
+    .ebay-thumbnail {
+        height: 80px;
+    }
+
+    .ebay-price {
+        font-size: 0.8rem;
+    }
+
+    .ebay-filename {
+        font-size: 0.65rem;
+    }
+}
+
