@@ -176,11 +176,28 @@ games = [
     {
         'id': 'spiel3',
         'number': 3,
-        'name': 'Blind Artist',
+        'name': 'Blind Artist – Team Battle',
         'punkte': 4,
-        'beschreibung': 'Blindfolded, David und ein Gast seiner Wahl zeichnen basierend auf Anweisungen von Kevin. Wer malt besser?',
-        'regeln': ['Beiden Spielern werden die Augen verbunden.', 'Ein Thema wird vorgegeben (z.B. "Katze").', 'Nach 2 Minuten wird bewertet: Wer hat das bessere Kunstwerk geschaffen?'],
-        'voting_options': [('david', 'David gewinnt'), ('gast', 'Gast gewinnt'), ('unentschieden', 'Unentschieden')]
+        'beschreibung': (
+            'David wählt drei Gäste aus: Einen, der mit ihm im Team zeichnet, '
+            'und zwei weitere, die das gegnerische Team bilden. In jedem Team '
+            'hat eine Person die Augen verbunden und zeichnet, die andere Person '
+            'muss den Begriff erraten.'
+        ),
+        'regeln': [
+            'David wählt drei Gäste: eine Person für sein Team und zwei Personen als gegnerisches Team.',
+            'In jedem Team hat eine Person die Augen verbunden (der/die Zeichner*in), die andere Person ist der/die Ratende.',
+            'Jedes Team erhält heimlich einen eigenen Begriff, z. B. Team David: „Katze“, gegnerisches Team: „Hund“.',
+            'Nur die Person mit verbundenen Augen bekommt den Begriff gesagt und muss ihn zeichnen – ohne zu sprechen.',
+            'Die ratende Person darf Fragen stellen und Vermutungen äußern, der/die Zeichner*in antwortet nur mit Gesten (z. B. Kopfnicken oder Kopfschütteln).',
+            'Gewonnen hat das Team, dessen ratende Person zuerst den richtigen Begriff errät.',
+            'Optional: Nach der Runde können die Kunstwerke allen Gästen gezeigt und bejubelt werden.'
+        ],
+        'voting_options': [
+            ('team_david', 'Team David gewinnt'),
+            ('gegnerteam', 'Gegnerteam gewinnt'),
+            ('unentschieden', 'Unentschieden / beide zu gut oder keiner errät es')
+        ]
     },
     {
         'id': 'spiel4',
