@@ -518,7 +518,7 @@ def ebay_show_image(image_id):
     """Zeigt ein eBay-Bild an (nur Moderator)."""
     global current_ebay_image_id, show_ebay_image
     
-    if not session.get('ebay_moderator', False):
+    if not session.get('moderator_authenticated', False):
         return jsonify({'success': False, 'error': 'Nicht autorisiert'}), 403
     
     if 0 <= image_id < len(ebay_images):
@@ -533,7 +533,7 @@ def ebay_hide_image():
     """Versteckt das eBay-Bild (nur Moderator)."""
     global show_ebay_image
     
-    if not session.get('ebay_moderator', False):
+    if not session.get('moderator_authenticated', False):
         return jsonify({'success': False, 'error': 'Nicht autorisiert'}), 403
     
     show_ebay_image = False
