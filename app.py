@@ -75,6 +75,19 @@ votes = {
     'spiel6': {'david': 0, 'gast': 0, 'unentschieden': 0},
 }
 
+# Track who has voted for each game: {'spiel1': {'user_id_1', 'user_id_2', ...}, ...}
+user_votes_tracker = {
+    'spiel1': set(),
+    'spiel2': set(),
+    'spiel3': set(),
+    'spiel4': set(),
+    'spiel5': set(),
+    'spiel6': set(),
+}
+
+# Track who has liked each image: {'image_id': {'user_id_1', 'user_id_2', ...}, ...}
+image_likes_tracker = {}
+
 # Scoreboard: Punkte pro Team
 scores = {
     'david': 0,
@@ -263,6 +276,12 @@ games = [
 
 # ========== HILFS-FUNKTIONEN ==========
 
+def get_user_id():
+    """Generiert oder holt eine eindeutige User ID aus der Session."""
+    if 'user_id' not in session:
+        session['user_id'] = str(uuid4())
+    return session['user_id']
+
 def get_game_by_id(game_id):
     """Findet ein Spiel anhand seiner ID."""
     for game in games:
@@ -283,6 +302,9 @@ def reset_votes_for_game(game_id):
     if game_id in votes:
         for key in votes[game_id]:
             votes[game_id][key] = 0
+    # Reset user votes tracker too
+    if game_id in user_votes_tracker:
+        user_votes_tracker[game_id].clear()
 
 # ========== GEWINNSPIEL HELPER FUNKTIONEN ==========
 
@@ -379,15 +401,29 @@ def vote(game_id, option):
     """
     Registriert eine Abstimmung.
     Beispiel: /vote/spiel1/david
+    Jeden Benutzer darf nur einmal pro Spiel abstimmen.
     """
-    if game_id in votes and option in votes[game_id]:
-        votes[game_id][option] += 1
+    if game_id not in votes or option not in votes[game_id]:
+        return jsonify({'success': False, 'message': 'Ungültige Abstimmung'}), 400
+    
+    user_id = get_user_id()
+    
+    # Check if user already voted for this game
+    if user_id in user_votes_tracker[game_id]:
         return jsonify({
-            'success': True,
-            'message': f'Danke für deine Abstimmung!',
-            'votes': votes[game_id]
-        })
-    return jsonify({'success': False, 'message': 'Ungültige Abstimmung'}), 400
+            'success': False, 
+            'message': 'Du hast bereits für dieses Spiel abgestimmt!'
+        }), 400
+    
+    # Record vote
+    votes[game_id][option] += 1
+    user_votes_tracker[game_id].add(user_id)
+    
+    return jsonify({
+        'success': True,
+        'message': f'Danke für deine Abstimmung!',
+        'votes': votes[game_id]
+    })
 
 @app.route('/get_votes/<game_id>')
 def get_votes(game_id):
@@ -556,15 +592,33 @@ def upload_image():
 def vote_image(image_id):
     """
     Registriert eine Abstimmung für ein Bild.
+    Jeden Benutzer darf nur einmal pro Bild abstimmen.
     """
-    if image_id in gewinnspiel_images:
-        gewinnspiel_images[image_id]['votes'] += 1
+    if image_id not in gewinnspiel_images:
+        return jsonify({'success': False, 'error': 'Bild nicht gefunden'}), 404
+    
+    user_id = get_user_id()
+    
+    # Initialize likes tracker for this image if not exists
+    if image_id not in image_likes_tracker:
+        image_likes_tracker[image_id] = set()
+    
+    # Check if user already liked this image
+    if user_id in image_likes_tracker[image_id]:
         return jsonify({
-            'success': True,
-            'message': 'Danke für deine Abstimmung!',
-            'votes': gewinnspiel_images[image_id]['votes']
-        })
-    return jsonify({'success': False, 'error': 'Bild nicht gefunden'}), 404
+            'success': False,
+            'error': 'Du hast bereits für dieses Bild abgestimmt!'
+        }), 400
+    
+    # Record like
+    gewinnspiel_images[image_id]['votes'] += 1
+    image_likes_tracker[image_id].add(user_id)
+    
+    return jsonify({
+        'success': True,
+        'message': 'Danke für deine Abstimmung!',
+        'votes': gewinnspiel_images[image_id]['votes']
+    })
 
 @app.route('/get_images')
 def get_images():
