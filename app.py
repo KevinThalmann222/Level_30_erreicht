@@ -47,7 +47,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ========== GEWINNSPIEL KONFIGURATION ==========
-UPLOAD_FOLDER = 'static/uploads'
+# Use absolute paths to ensure they work on PythonAnywhere and locally
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(APP_ROOT, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
@@ -81,7 +83,6 @@ scores = {
 
 # ========== EBAY KLEINANZEIGEN KONFIGURATION ==========
 # Use absolute path to ensure it works on PythonAnywhere and local
-APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 EBAY_FOLDER = os.path.join(APP_ROOT, 'static', 'ebay')
 
 # Ensure ebay folder exists
