@@ -107,11 +107,14 @@ Am Ende der Party werden die Punkte zusammengezählt, und David erhält je nach 
 - Python 3.7 oder höher
 - pip (Python Package Manager)
 
-### Schritt 1: Repository klonen
+### Schritt 1: Repository klonen oder herunterladen
 
 ```bash
+# Repository klonen
 git clone https://github.com/KevinThalmann222/Level_30_erreicht.git
 cd Level_30_erreicht
+
+# Oder: ZIP-Datei herunterladen und entpacken
 ```
 
 ### Schritt 2: Abhängigkeiten installieren
@@ -131,7 +134,17 @@ Die App läuft dann auf `http://localhost:5000`
 
 **Produktionsmodus:**
 ```bash
+pip install -r requirements-prod.txt  # Installiert Gunicorn
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
+```
+
+Oder alternativ die mitgelieferten Skripte verwenden:
+```bash
+# Linux/Mac
+./run-production.sh
+
+# Windows
+run-production.bat
 ```
 
 ## 📱 Verwendung
